@@ -20,10 +20,21 @@ export interface Position {
 
 export interface NewsItem {
   id: string;
-  text: string;
+  headline: string;
+  body: string;
   type: "macro" | "sector" | "company";
+  category: string;
   affectedTickers?: string[];
-  modifier?: number;
+  affectedSector?: string;
+}
+
+export interface NewsEffect {
+  id: string;
+  type: "company" | "sector" | "macro";
+  target: string;
+  direction: "positive" | "negative";
+  strength: "small" | "medium" | "large";
+  daysRemaining: number;
 }
 
 export type CareerLevel = "Junior" | "Associate" | "Senior" | "Partner";
@@ -36,6 +47,8 @@ export interface GameState {
   reputation: number;
   newClientUsedToday: boolean;
   dailyNews: NewsItem[];
+  activeNewsEffects: NewsEffect[];
+  hadNewsToday: boolean;
   feedMessages: string[];
   selectedTicker: string | null;
   showEndOfDayModal: boolean;
@@ -79,91 +92,127 @@ const INITIAL_STOCKS: Stock[] = [
   { ticker: "PNTL", name: "Pinnacle Telecom", sector: "Telecom", price: 56.80, previousPrice: 56.80, volatility: 0.015, priceHistory: [] },
 ];
 
-const MACRO_NEWS = [
-  "Central bank signals potential rate adjustment in coming months.",
-  "Inflation data comes in slightly above expectations.",
-  "Economic growth remains steady according to latest reports.",
-  "Labor market shows resilience despite global headwinds.",
-  "Consumer confidence index rises for third consecutive month.",
-  "Trade negotiations between major economies continue.",
-  "Currency markets remain stable amid policy discussions.",
-  "Quarterly GDP figures meet analyst expectations.",
+interface NewsTemplate {
+  headline: string;
+  body: string;
+  direction: "positive" | "negative";
+  strength: "small" | "medium" | "large";
+}
+
+const MACRO_NEWS: NewsTemplate[] = [
+  { headline: "Central Bank Signals Rate Adjustment", body: "Officials indicated potential monetary policy changes in coming months. Markets are closely watching for further guidance on interest rate direction.", direction: "positive", strength: "small" },
+  { headline: "Inflation Data Above Expectations", body: "The latest consumer price index came in higher than analysts predicted. Economic observers are reassessing growth projections for the quarter.", direction: "negative", strength: "small" },
+  { headline: "Strong Economic Growth Reported", body: "GDP figures exceeded forecasts, showing resilient consumer spending and business investment. Analysts view this as a positive sign for corporate earnings.", direction: "positive", strength: "medium" },
+  { headline: "Labor Market Shows Resilience", body: "Employment data remains steady despite global economic headwinds. Job creation continues across multiple sectors.", direction: "positive", strength: "small" },
+  { headline: "Consumer Confidence Rises", body: "The consumer confidence index increased for the third consecutive month. Retail and consumer-facing sectors may see increased activity.", direction: "positive", strength: "small" },
+  { headline: "Trade Tensions Ease Between Nations", body: "Diplomatic progress was reported in ongoing trade negotiations. Supply chain constraints may improve in coming months.", direction: "positive", strength: "medium" },
+  { headline: "Currency Markets See Volatility", body: "Exchange rate fluctuations have increased amid policy uncertainty. International companies may face margin pressure.", direction: "negative", strength: "small" },
 ];
 
-const SECTOR_NEWS: Record<string, { news: string; modifier: number }[]> = {
+const SECTOR_NEWS: Record<string, NewsTemplate[]> = {
   Technology: [
-    { news: "New cybersecurity regulations boost tech sector spending.", modifier: 0.02 },
-    { news: "Cloud adoption accelerates across enterprise clients.", modifier: 0.015 },
-    { news: "Tech sector faces headwinds from supply chain concerns.", modifier: -0.02 },
+    { headline: "Cybersecurity Regulations Expand", body: "New government mandates require enhanced security measures for enterprise systems. Companies in the space are seeing increased demand for solutions.", direction: "positive", strength: "medium" },
+    { headline: "Cloud Adoption Accelerates", body: "Enterprise migration to cloud infrastructure continues at a rapid pace. Platform providers report strong quarterly bookings.", direction: "positive", strength: "medium" },
+    { headline: "Tech Supply Chain Disruption", body: "Component shortages are affecting production schedules across the technology sector. Lead times have extended for several key parts.", direction: "negative", strength: "medium" },
+    { headline: "AI Investment Surge", body: "Venture capital flowing into artificial intelligence startups reached new highs. Established tech firms are ramping up their own AI initiatives.", direction: "positive", strength: "large" },
   ],
   Finance: [
-    { news: "Banking sector sees increased lending activity.", modifier: 0.015 },
-    { news: "Financial services benefit from rising interest rates.", modifier: 0.018 },
-    { news: "Regulatory scrutiny increases for payment processors.", modifier: -0.015 },
+    { headline: "Banking Lending Activity Up", body: "Financial institutions report increased loan origination volumes. Both consumer and commercial lending categories showed growth.", direction: "positive", strength: "medium" },
+    { headline: "Interest Rates Benefit Financials", body: "Rising rates have improved net interest margins for traditional banks. Analysts expect continued earnings strength in the sector.", direction: "positive", strength: "medium" },
+    { headline: "Payment Processor Scrutiny", body: "Regulators announced expanded oversight of digital payment systems. Compliance costs are expected to increase for affected companies.", direction: "negative", strength: "medium" },
   ],
   Healthcare: [
-    { news: "Medical device approvals accelerate globally.", modifier: 0.02 },
-    { news: "Healthcare spending projected to increase next quarter.", modifier: 0.015 },
+    { headline: "Medical Device Approvals Accelerate", body: "The regulatory agency cleared a backlog of device applications. Several companies received faster-than-expected product authorizations.", direction: "positive", strength: "medium" },
+    { headline: "Healthcare Spending to Rise", body: "Government projections show increased healthcare expenditures next quarter. Providers and device manufacturers may benefit.", direction: "positive", strength: "medium" },
+    { headline: "Drug Pricing Under Review", body: "Lawmakers are examining pharmaceutical pricing practices. Industry observers see potential margin pressure ahead.", direction: "negative", strength: "medium" },
   ],
   Transportation: [
-    { news: "Shipping rates stabilize after recent volatility.", modifier: 0.01 },
-    { news: "Fuel costs pressure transportation margins.", modifier: -0.018 },
-    { news: "Urban mobility solutions gain municipal support.", modifier: 0.02 },
+    { headline: "Shipping Rates Stabilize", body: "After months of volatility, container rates have found equilibrium. Logistics companies report improved planning visibility.", direction: "positive", strength: "small" },
+    { headline: "Fuel Costs Pressure Margins", body: "Rising energy prices are squeezing transportation companies. Carriers are evaluating surcharge adjustments.", direction: "negative", strength: "medium" },
+    { headline: "Urban Mobility Gets Municipal Support", body: "Several cities announced partnerships with mobility providers. Infrastructure investments are planned for next fiscal year.", direction: "positive", strength: "medium" },
   ],
   Utilities: [
-    { news: "Power grid investments receive government backing.", modifier: 0.012 },
-    { news: "Renewable energy transition creates opportunities.", modifier: 0.015 },
+    { headline: "Grid Infrastructure Investment", body: "Government backing for power grid modernization was announced. Utility companies stand to benefit from increased spending.", direction: "positive", strength: "medium" },
+    { headline: "Renewable Energy Transition Continues", body: "Solar and wind capacity additions outpaced conventional sources. Clean energy providers see expanding opportunities.", direction: "positive", strength: "medium" },
   ],
   Materials: [
-    { news: "Battery material demand surges with EV growth.", modifier: 0.025 },
-    { news: "Raw material costs pressure margins industry-wide.", modifier: -0.015 },
+    { headline: "Battery Material Demand Surges", body: "Electric vehicle growth is driving increased demand for specialized materials. Mining and processing companies report strong order books.", direction: "positive", strength: "large" },
+    { headline: "Raw Material Costs Rise", body: "Commodity prices have increased across multiple categories. Manufacturers face margin pressure from input costs.", direction: "negative", strength: "medium" },
   ],
   Consumer: [
-    { news: "Consumer spending remains resilient.", modifier: 0.01 },
-    { news: "Food sector benefits from stable commodity prices.", modifier: 0.012 },
+    { headline: "Consumer Spending Resilient", body: "Retail sales data showed continued strength in discretionary categories. Consumer confidence remains elevated.", direction: "positive", strength: "small" },
+    { headline: "Food Commodity Prices Stable", body: "Agricultural markets have found stability after recent volatility. Food producers benefit from predictable input costs.", direction: "positive", strength: "small" },
   ],
   Industrial: [
-    { news: "Factory automation investments continue to grow.", modifier: 0.018 },
-    { news: "Manufacturing sector shows mixed results.", modifier: -0.01 },
+    { headline: "Factory Automation Investment Grows", body: "Manufacturers are accelerating robotics adoption to address labor constraints. Automation equipment demand remains strong.", direction: "positive", strength: "medium" },
+    { headline: "Industrial Output Mixed", body: "Manufacturing activity shows uneven performance across subsectors. Some categories face inventory destocking.", direction: "negative", strength: "small" },
   ],
   Telecom: [
-    { news: "Telecom infrastructure spending remains stable.", modifier: 0.008 },
-    { news: "5G rollout continues to drive subscriber growth.", modifier: 0.012 },
+    { headline: "Telecom Infrastructure Steady", body: "Network equipment spending remains on track for the year. Carriers continue planned capital expenditure programs.", direction: "positive", strength: "small" },
+    { headline: "5G Rollout Drives Subscriber Growth", body: "Next-generation wireless adoption is accelerating in urban markets. Average revenue per user metrics are improving.", direction: "positive", strength: "medium" },
   ],
 };
 
-const COMPANY_NEWS: Record<string, { news: string; modifier: number }[]> = {
+const COMPANY_NEWS: Record<string, NewsTemplate[]> = {
   NLSY: [
-    { news: "Nordlite Systems wins major logistics contract.", modifier: 0.04 },
-    { news: "Nordlite faces integration challenges with new platform.", modifier: -0.025 },
+    { headline: "Nordlite Systems Wins Major Contract", body: "Nordlite Systems (NLSY) secured a significant multi-year logistics technology deal. The contract includes platform deployment across regional distribution centers.", direction: "positive", strength: "large" },
+    { headline: "Nordlite Faces Integration Delays", body: "Nordlite Systems (NLSY) reported challenges integrating its new platform at customer sites. Project timelines have been extended for several implementations.", direction: "negative", strength: "medium" },
   ],
   VCLD: [
-    { news: "Vanta Cloudworks reports record enterprise signups.", modifier: 0.035 },
-    { news: "Cloud outage impacts Vanta Cloudworks reputation.", modifier: -0.03 },
+    { headline: "Vanta Cloudworks Sets Signup Record", body: "Vanta Cloudworks (VCLD) announced record enterprise customer additions. The company's cloud platform saw accelerated adoption in the healthcare vertical.", direction: "positive", strength: "large" },
+    { headline: "Vanta Cloud Outage Reported", body: "Vanta Cloudworks (VCLD) experienced a service disruption affecting customer operations. Engineering teams worked to restore full functionality within hours.", direction: "negative", strength: "medium" },
   ],
   KFRG: [
-    { news: "Kernel Forge secures government cybersecurity deal.", modifier: 0.045 },
-    { news: "Kernel Forge faces competition from new entrants.", modifier: -0.02 },
+    { headline: "Kernel Forge Lands Government Deal", body: "Kernel Forge (KFRG) was selected for a federal cybersecurity initiative. The multi-phase contract spans critical infrastructure protection.", direction: "positive", strength: "large" },
+    { headline: "Kernel Forge Faces New Competition", body: "Kernel Forge (KFRG) is responding to increased competitive pressure in its core market. Several new entrants have emerged with alternative solutions.", direction: "negative", strength: "medium" },
   ],
   HLBG: [
-    { news: "Halberg Industries expands manufacturing capacity.", modifier: 0.03 },
+    { headline: "Halberg Industries Expands Capacity", body: "Halberg Industries (HLBG) announced plans to increase manufacturing output. New production lines will come online by next quarter.", direction: "positive", strength: "medium" },
+    { headline: "Halberg Equipment Order Delayed", body: "Halberg Industries (HLBG) reported that a key equipment order has been pushed back. The delay stems from vendor supply constraints.", direction: "negative", strength: "small" },
   ],
   AGCO: [
-    { news: "Aurora Grid Co wins regional utility contract.", modifier: 0.025 },
+    { headline: "Aurora Grid Wins Utility Contract", body: "Aurora Grid Co (AGCO) secured a regional power infrastructure agreement. The project includes grid modernization across three service territories.", direction: "positive", strength: "medium" },
+    { headline: "Aurora Grid Permit Under Review", body: "Aurora Grid Co (AGCO) faces extended review of a major project permit. Regulatory timelines have shifted for the planned installation.", direction: "negative", strength: "small" },
   ],
   SLVX: [
-    { news: "Solvex Materials announces breakthrough in battery tech.", modifier: 0.05 },
-    { news: "Solvex faces supply chain disruptions.", modifier: -0.03 },
+    { headline: "Solvex Announces Tech Breakthrough", body: "Solvex Materials (SLVX) revealed a significant advancement in battery technology. The development could improve energy density in next-generation cells.", direction: "positive", strength: "large" },
+    { headline: "Solvex Supply Chain Disrupted", body: "Solvex Materials (SLVX) reported disruptions in its raw material supply network. Production schedules may be affected in the near term.", direction: "negative", strength: "medium" },
+  ],
+  BHFN: [
+    { headline: "Bronze Harbor Expands Lending", body: "Bronze Harbor Finance (BHFN) reported growth in its commercial lending portfolio. New originations exceeded quarterly targets.", direction: "positive", strength: "medium" },
+    { headline: "Bronze Harbor Loan Quality Reviewed", body: "Bronze Harbor Finance (BHFN) disclosed increased provisions for potential loan losses. The company cited evolving economic conditions.", direction: "negative", strength: "medium" },
+  ],
+  MBPY: [
+    { headline: "Mintbridge Payments Volume Grows", body: "Mintbridge Payments (MBPY) processed record transaction volumes last month. The platform continues to gain merchant adoption.", direction: "positive", strength: "medium" },
+    { headline: "Mintbridge Under Regulatory Review", body: "Mintbridge Payments (MBPY) received notice of a regulatory examination. The company expects to cooperate fully with the review.", direction: "negative", strength: "medium" },
+  ],
+  OIGR: [
+    { headline: "Orchard Insure Expands Coverage", body: "Orchard Insure Group (OIGR) launched new insurance products in three additional states. The expansion builds on strong regional performance.", direction: "positive", strength: "medium" },
+    { headline: "Orchard Insure Claims Rise", body: "Orchard Insure Group (OIGR) reported higher-than-expected claims in a recent period. Weather-related events contributed to the increase.", direction: "negative", strength: "small" },
   ],
   CRMD: [
-    { news: "Cirrus Medical receives FDA clearance for new device.", modifier: 0.04 },
-    { news: "Cirrus Medical faces recall concerns.", modifier: -0.035 },
+    { headline: "Cirrus Medical Receives Clearance", body: "Cirrus Medical (CRMD) obtained regulatory approval for its latest diagnostic device. Commercial launch is planned for next month.", direction: "positive", strength: "large" },
+    { headline: "Cirrus Medical Recall Concerns", body: "Cirrus Medical (CRMD) is evaluating a voluntary recall of certain device components. The company emphasized patient safety protocols.", direction: "negative", strength: "large" },
+  ],
+  FJFF: [
+    { headline: "Fjord Fresh Expands Distribution", body: "Fjord Fresh Foods (FJFF) announced new retail partnerships expanding product availability. The deals cover major grocery chains in new regions.", direction: "positive", strength: "medium" },
+    { headline: "Fjord Fresh Faces Cost Pressure", body: "Fjord Fresh Foods (FJFF) reported margin pressure from ingredient cost increases. Pricing adjustments are being evaluated.", direction: "negative", strength: "small" },
+  ],
+  LRLB: [
+    { headline: "Lumina Retail Labs Launches Platform", body: "Lumina Retail Labs (LRLB) debuted its next-generation retail analytics solution. Early adopters report improved conversion metrics.", direction: "positive", strength: "medium" },
+    { headline: "Lumina Labs Customer Loss", body: "Lumina Retail Labs (LRLB) disclosed the departure of a significant customer. The company is pursuing new enterprise opportunities.", direction: "negative", strength: "medium" },
   ],
   SHMB: [
-    { news: "Skyharbor Mobility expands to new metropolitan areas.", modifier: 0.03 },
+    { headline: "Skyharbor Expands to New Cities", body: "Skyharbor Mobility (SHMB) launched operations in four additional metropolitan areas. The expansion follows successful pilot programs.", direction: "positive", strength: "medium" },
+    { headline: "Skyharbor Faces Regulatory Challenge", body: "Skyharbor Mobility (SHMB) encountered new municipal operating requirements. Compliance costs may increase in affected markets.", direction: "negative", strength: "small" },
   ],
   TWSH: [
-    { news: "Tideway Shipping benefits from increased cargo volume.", modifier: 0.025 },
+    { headline: "Tideway Shipping Volume Increases", body: "Tideway Shipping (TWSH) reported strong cargo throughput gains. Port efficiency improvements contributed to higher utilization.", direction: "positive", strength: "medium" },
+    { headline: "Tideway Vessel Maintenance Extended", body: "Tideway Shipping (TWSH) announced extended maintenance for several vessels. Fleet availability will be reduced temporarily.", direction: "negative", strength: "small" },
+  ],
+  PNTL: [
+    { headline: "Pinnacle Telecom Network Upgrade", body: "Pinnacle Telecom (PNTL) completed a major infrastructure modernization milestone. Network capacity has been significantly expanded.", direction: "positive", strength: "medium" },
+    { headline: "Pinnacle Telecom Subscriber Churn", body: "Pinnacle Telecom (PNTL) reported higher customer turnover in a competitive market. Retention programs are being enhanced.", direction: "negative", strength: "small" },
   ],
 };
 
@@ -177,61 +226,164 @@ function initializeStocks(): Stock[] {
   }));
 }
 
-function generateDailyNews(stocks: Stock[]): { news: NewsItem[], modifiers: Map<string, number> } {
+function getStrengthModifier(strength: "small" | "medium" | "large", direction: "positive" | "negative"): number {
+  const sign = direction === "positive" ? 1 : -1;
+  switch (strength) {
+    case "small": return sign * (0.01 + Math.random() * 0.015);
+    case "medium": return sign * (0.02 + Math.random() * 0.025);
+    case "large": return sign * (0.04 + Math.random() * 0.06);
+  }
+}
+
+function determineNewsCount(): number {
+  const roll = Math.random();
+  if (roll < 0.35) return 0;
+  if (roll < 0.75) return 1;
+  if (roll < 0.95) return 2;
+  return 3;
+}
+
+function selectNewsType(): "company" | "sector" | "macro" {
+  const roll = Math.random();
+  if (roll < 0.60) return "company";
+  if (roll < 0.90) return "sector";
+  return "macro";
+}
+
+function generateDailyNews(stocks: Stock[]): { news: NewsItem[], effects: NewsEffect[] } {
+  const newsCount = determineNewsCount();
   const news: NewsItem[] = [];
+  const effects: NewsEffect[] = [];
+  
+  if (newsCount === 0) {
+    return { news: [], effects: [] };
+  }
+  
+  const usedCompanyTickers = new Set<string>();
+  const usedSectors = new Set<string>();
+  const sectors = Array.from(new Set(stocks.map(s => s.sector)));
+  
+  for (let i = 0; i < newsCount; i++) {
+    const newsType = selectNewsType();
+    
+    if (newsType === "company") {
+      const availableTickers = Object.keys(COMPANY_NEWS).filter(t => !usedCompanyTickers.has(t));
+      if (availableTickers.length === 0) continue;
+      
+      const ticker = availableTickers[Math.floor(Math.random() * availableTickers.length)];
+      usedCompanyTickers.add(ticker);
+      
+      const templates = COMPANY_NEWS[ticker];
+      if (!templates || templates.length === 0) continue;
+      
+      const template = templates[Math.floor(Math.random() * templates.length)];
+      const stock = stocks.find(s => s.ticker === ticker);
+      
+      news.push({
+        id: `company-${ticker}-${Date.now()}-${i}`,
+        headline: template.headline,
+        body: template.body,
+        type: "company",
+        category: stock?.sector || "Company",
+        affectedTickers: [ticker],
+      });
+      
+      effects.push({
+        id: `effect-company-${ticker}-${Date.now()}-${i}`,
+        type: "company",
+        target: ticker,
+        direction: template.direction,
+        strength: template.strength,
+        daysRemaining: 1 + Math.floor(Math.random() * 2),
+      });
+      
+    } else if (newsType === "sector") {
+      const availableSectors = sectors.filter(s => !usedSectors.has(s) && SECTOR_NEWS[s]);
+      if (availableSectors.length === 0) continue;
+      
+      const sector = availableSectors[Math.floor(Math.random() * availableSectors.length)];
+      usedSectors.add(sector);
+      
+      const templates = SECTOR_NEWS[sector];
+      if (!templates || templates.length === 0) continue;
+      
+      const template = templates[Math.floor(Math.random() * templates.length)];
+      const affectedTickers = stocks.filter(s => s.sector === sector).map(s => s.ticker);
+      
+      news.push({
+        id: `sector-${sector}-${Date.now()}-${i}`,
+        headline: template.headline,
+        body: template.body,
+        type: "sector",
+        category: sector,
+        affectedTickers,
+        affectedSector: sector,
+      });
+      
+      effects.push({
+        id: `effect-sector-${sector}-${Date.now()}-${i}`,
+        type: "sector",
+        target: sector,
+        direction: template.direction,
+        strength: template.strength,
+        daysRemaining: 1 + Math.floor(Math.random() * 2),
+      });
+      
+    } else {
+      const template = MACRO_NEWS[Math.floor(Math.random() * MACRO_NEWS.length)];
+      
+      news.push({
+        id: `macro-${Date.now()}-${i}`,
+        headline: template.headline,
+        body: template.body,
+        type: "macro",
+        category: "Economy",
+      });
+      
+      effects.push({
+        id: `effect-macro-${Date.now()}-${i}`,
+        type: "macro",
+        target: "market",
+        direction: template.direction,
+        strength: template.strength,
+        daysRemaining: 1,
+      });
+    }
+  }
+  
+  return { news, effects };
+}
+
+function applyNewsEffects(stocks: Stock[], effects: NewsEffect[]): Map<string, number> {
   const modifiers = new Map<string, number>();
   
-  if (Math.random() < 0.7) {
-    const macroNews = MACRO_NEWS[Math.floor(Math.random() * MACRO_NEWS.length)];
-    news.push({
-      id: `macro-${Date.now()}`,
-      text: macroNews,
-      type: "macro",
-    });
-  }
-  
-  const sectors = Array.from(new Set(stocks.map(s => s.sector)));
-  if (Math.random() < 0.5) {
-    const sector = sectors[Math.floor(Math.random() * sectors.length)];
-    const sectorNewsList = SECTOR_NEWS[sector];
-    if (sectorNewsList && sectorNewsList.length > 0) {
-      const selected = sectorNewsList[Math.floor(Math.random() * sectorNewsList.length)];
-      const affectedTickers = stocks.filter(s => s.sector === sector).map(s => s.ticker);
-      news.push({
-        id: `sector-${Date.now()}`,
-        text: selected.news,
-        type: "sector",
-        affectedTickers,
-        modifier: selected.modifier,
-      });
-      affectedTickers.forEach(t => {
-        modifiers.set(t, (modifiers.get(t) || 0) + selected.modifier);
-      });
+  for (const effect of effects) {
+    const modifier = getStrengthModifier(effect.strength, effect.direction);
+    
+    if (effect.type === "company") {
+      const currentMod = modifiers.get(effect.target) || 0;
+      modifiers.set(effect.target, currentMod + modifier);
+    } else if (effect.type === "sector") {
+      const sectorStocks = stocks.filter(s => s.sector === effect.target);
+      for (const stock of sectorStocks) {
+        const currentMod = modifiers.get(stock.ticker) || 0;
+        modifiers.set(stock.ticker, currentMod + modifier * 0.6);
+      }
+    } else if (effect.type === "macro") {
+      for (const stock of stocks) {
+        const currentMod = modifiers.get(stock.ticker) || 0;
+        modifiers.set(stock.ticker, currentMod + modifier * 0.3);
+      }
     }
   }
   
-  const numCompanyNews = Math.random() < 0.4 ? (Math.random() < 0.5 ? 1 : 2) : 0;
-  const usedTickers = new Set<string>();
-  for (let i = 0; i < numCompanyNews; i++) {
-    const tickersWithNews = Object.keys(COMPANY_NEWS).filter(t => !usedTickers.has(t));
-    if (tickersWithNews.length === 0) break;
-    const ticker = tickersWithNews[Math.floor(Math.random() * tickersWithNews.length)];
-    usedTickers.add(ticker);
-    const companyNewsList = COMPANY_NEWS[ticker];
-    if (companyNewsList && companyNewsList.length > 0) {
-      const selected = companyNewsList[Math.floor(Math.random() * companyNewsList.length)];
-      news.push({
-        id: `company-${ticker}-${Date.now()}`,
-        text: selected.news,
-        type: "company",
-        affectedTickers: [ticker],
-        modifier: selected.modifier,
-      });
-      modifiers.set(ticker, (modifiers.get(ticker) || 0) + selected.modifier);
-    }
-  }
-  
-  return { news, modifiers };
+  return modifiers;
+}
+
+function decayEffects(effects: NewsEffect[]): NewsEffect[] {
+  return effects
+    .map(e => ({ ...e, daysRemaining: e.daysRemaining - 1 }))
+    .filter(e => e.daysRemaining > 0);
 }
 
 function updateStockPrices(stocks: Stock[], modifiers: Map<string, number>): Stock[] {
@@ -305,6 +457,8 @@ export const useStockGame = create<GameState>()(
       reputation: savedState?.reputation || 50,
       newClientUsedToday: savedState?.newClientUsedToday || false,
       dailyNews: [],
+      activeNewsEffects: [],
+      hadNewsToday: false,
       feedMessages: ["Welcome to your trading desk. Good luck!"],
       selectedTicker: null,
       showEndOfDayModal: false,
@@ -414,14 +568,17 @@ export const useStockGame = create<GameState>()(
       },
       
       endDay: () => {
-        const { stocks, positions, cash, tutorialMode, tutorialTicker } = get();
+        const { stocks, positions, cash, tutorialMode, tutorialTicker, activeNewsEffects } = get();
         
         const previousValue = positions.reduce((total, pos) => {
           const stock = stocks.find(s => s.ticker === pos.ticker);
           return total + (stock ? pos.shares * stock.previousPrice : 0);
         }, 0) + cash;
         
-        const { news, modifiers } = generateDailyNews(stocks);
+        const { news, effects: newEffects } = generateDailyNews(stocks);
+        
+        const allEffects = [...activeNewsEffects, ...newEffects];
+        const modifiers = applyNewsEffects(stocks, allEffects);
         
         if (tutorialMode && tutorialTicker) {
           const tutorialBoost = 0.02 + Math.random() * 0.04;
@@ -445,6 +602,7 @@ export const useStockGame = create<GameState>()(
         }
         
         const newRep = Math.max(0, Math.min(100, get().reputation + repChange));
+        const decayedEffects = decayEffects(allEffects);
         
         set({
           stocks: updatedStocks,
@@ -452,6 +610,8 @@ export const useStockGame = create<GameState>()(
           reputation: newRep,
           showEndOfDayModal: true,
           dailyNews: news,
+          activeNewsEffects: decayedEffects,
+          hadNewsToday: news.length > 0,
         });
         if (!tutorialMode) {
           saveState(get());
@@ -460,13 +620,19 @@ export const useStockGame = create<GameState>()(
       
       startNewDay: () => {
         const { dailyNews } = get();
-        const newsMessages = dailyNews.map(n => n.text);
+        const newsHeadlines = dailyNews.length > 0 
+          ? dailyNews.map(n => `• ${n.headline}`)
+          : [];
         
         set({
           day: get().day + 1,
           showEndOfDayModal: false,
           newClientUsedToday: false,
-          feedMessages: ["--- New Trading Day ---", ...newsMessages],
+          dailyNews: [],
+          hadNewsToday: false,
+          feedMessages: newsHeadlines.length > 0 
+            ? ["--- New Trading Day ---", ...newsHeadlines]
+            : ["--- New Trading Day ---", "Quiet day. No major headlines."],
         });
         saveState(get());
       },
@@ -482,6 +648,8 @@ export const useStockGame = create<GameState>()(
           reputation: 50,
           newClientUsedToday: false,
           dailyNews: [],
+          activeNewsEffects: [],
+          hadNewsToday: false,
           feedMessages: ["Game reset. Welcome back to your trading desk!"],
           selectedTicker: null,
           showEndOfDayModal: false,
@@ -504,6 +672,8 @@ export const useStockGame = create<GameState>()(
           reputation: 50,
           newClientUsedToday: false,
           dailyNews: [],
+          activeNewsEffects: [],
+          hadNewsToday: false,
           feedMessages: ["Welcome to the tutorial! Let's learn how to trade."],
           selectedTicker: null,
           showEndOfDayModal: false,

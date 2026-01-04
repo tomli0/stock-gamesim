@@ -1,0 +1,115 @@
+Modify the News system so news does NOT appear every day. News should be random and occasional, but when it appears it must be relevant to the game’s fictional companies/tickers and/or sectors, and it must influence the market simulation.
+
+IMPORTANT RULES:
+- Only use the game’s fictional companies/tickers and sectors (no real companies/data).
+- News can mention fictional companies/tickers when it is company-specific.
+- Do NOT show buy/sell recommendations.
+- Do NOT show explicit impact labels (no bullish/bearish).
+- Players must infer consequences.
+
+GOAL:
+Make news feel like occasional market catalysts, not constant daily filler.
+
+--------------------------------------------------
+1) RANDOM NEWS FREQUENCY (CORE CHANGE)
+--------------------------------------------------
+
+Instead of generating news every day, implement random generation with these probabilities:
+
+- 35% of days: NO news at all (“Quiet day”)
+- 40% of days: 1 news item
+- 20% of days: 2 news items
+- 5% of days: 3 news items (“Eventful day”)
+
+Display:
+- If no news today, the News tab should show a simple message:
+  “Quiet day. No major headlines.”
+
+--------------------------------------------------
+2) TYPES OF NEWS (WHEN IT HAPPENS)
+--------------------------------------------------
+
+When news is generated, choose types with weighted randomness:
+
+- Company news: 60%
+- Sector news: 30%
+- Macro news: 10%
+
+Company News:
+- Must reference exactly ONE fictional company (name + ticker) from the existing universe.
+- Event types include:
+  contracts, lawsuits/regulatory inquiry, product delay, earnings surprise, guidance change.
+
+Sector News:
+- Must reference a sector that exists in the game and affects multiple companies in that sector.
+- Examples: chip shortages, shipping rates, interest rates affecting lenders, battery materials costs.
+
+Macro News:
+- Broad and rare; affects general volatility/drift.
+
+--------------------------------------------------
+3) RELEVANCE GUARANTEE
+--------------------------------------------------
+
+Ensure news ALWAYS maps to something that exists in-game:
+- Company news targets a real in-game ticker.
+- Sector news targets a real in-game sector with at least 2 companies assigned to it.
+- If the game currently lacks sector mapping, create and maintain a sector field for each company.
+
+--------------------------------------------------
+4) MARKET IMPACT (HIDDEN)
+--------------------------------------------------
+
+Each news item creates a hidden effect object:
+- type: company | sector | macro
+- target: ticker / sector / market
+- direction: positive | negative | volatilityIncrease
+- strength: small | medium | large
+- durationDays: 1–3 with decay
+
+Impact guidelines:
+- Company news: noticeable modifier (±2% to ±10% depending on strength).
+- Sector news: moderate (±0.5% to ±4%).
+- Macro news: small drift and/or volatility shift.
+
+Do NOT show impact magnitude/direction labels in the UI.
+
+--------------------------------------------------
+5) NEWS TAB UI
+--------------------------------------------------
+
+- Keep the News tab as a scrollable list of cards.
+- Each card shows:
+  - Headline
+  - Category badge: Company / Sector / Macro
+  - Timestamp: “Morning Brief”
+  - Body (2–4 sentences)
+- If multiple items exist that day, show them in chronological order.
+- If no items, show the “Quiet day” state.
+
+Optional: Keep last 3 days of news accessible via a small dropdown:
+- “Today / Yesterday / 2 days ago”
+(If quick to implement; otherwise skip.)
+
+--------------------------------------------------
+6) END OF DAY INTEGRATION
+--------------------------------------------------
+
+- If there was news today, include a short line in End of Day summary:
+  “Today’s headlines influenced market movement.”
+- If no news today, do not mention news in the summary.
+
+--------------------------------------------------
+7) PERSISTENCE
+--------------------------------------------------
+
+Persist:
+- Today’s news items (if any)
+- Active effects with remaining duration
+- Historical news (if implemented)
+
+DELIVERABLE:
+- News appears randomly and occasionally as described.
+- All news is relevant to in-game companies/sectors.
+- News influences the market internally without explicit hints.
+- UI handles “no news” days cleanly.

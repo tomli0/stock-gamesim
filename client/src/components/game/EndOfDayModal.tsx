@@ -6,6 +6,7 @@ export default function EndOfDayModal() {
     day, 
     dailyPnL, 
     dailyNews,
+    hadNewsToday,
     stocks,
     positions,
     startNewDay,
@@ -72,21 +73,24 @@ export default function EndOfDayModal() {
             </div>
           </div>
           
-          {dailyNews.length > 0 && (
-            <div>
-              <div className="text-slate-400 text-sm mb-2">Tomorrow's Headlines</div>
-              <div className="space-y-2">
+          {hadNewsToday && dailyNews.length > 0 ? (
+            <div className="bg-slate-800/30 rounded-lg p-3">
+              <div className="text-slate-400 text-xs mb-2">Today's Headlines</div>
+              <p className="text-slate-300 text-sm italic">
+                Today's headlines influenced market movement.
+              </p>
+              <div className="space-y-1 mt-2">
                 {dailyNews.map((news) => (
-                  <div key={news.id} className="bg-slate-800/30 rounded px-3 py-2 text-slate-300 text-xs">
-                    {news.text}
-                    {news.affectedTickers && news.affectedTickers.length > 0 && (
-                      <span className="text-blue-400 ml-2">
-                        [{news.affectedTickers.join(", ")}]
-                      </span>
-                    )}
+                  <div key={news.id} className="text-slate-400 text-xs flex items-start gap-2">
+                    <span className="text-slate-500">•</span>
+                    <span>{news.headline}</span>
                   </div>
                 ))}
               </div>
+            </div>
+          ) : (
+            <div className="bg-slate-800/30 rounded-lg p-3">
+              <p className="text-slate-400 text-sm">Quiet day. No major headlines.</p>
             </div>
           )}
         </div>

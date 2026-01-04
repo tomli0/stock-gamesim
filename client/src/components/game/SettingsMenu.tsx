@@ -1,13 +1,24 @@
 import { useState } from "react";
 import { useStockGame } from "@/lib/stores/useStockGame";
+import { useAppState } from "@/lib/stores/useAppState";
+import { useIdleIncome } from "@/lib/stores/useIdleIncome";
 
 export default function SettingsMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const { resetGame } = useStockGame();
+  const { setScreen } = useAppState();
+  const { saveIdleState } = useIdleIncome();
+  
+  const handleMainMenu = () => {
+    saveIdleState();
+    setScreen("title");
+    setIsOpen(false);
+  };
   
   const handleReset = () => {
     if (confirm("Are you sure you want to reset your game? All progress will be lost.")) {
       resetGame();
+      useIdleIncome.getState().resetIdleState();
       setIsOpen(false);
     }
   };
@@ -26,8 +37,14 @@ export default function SettingsMenu() {
       </button>
       
       {isOpen && (
-        <div className="absolute bottom-12 right-0 bg-slate-900 border border-slate-700 rounded-lg shadow-xl p-4 w-48">
+        <div className="absolute bottom-12 right-0 bg-slate-900 border border-slate-700 rounded-lg shadow-xl p-4 w-48 space-y-2">
           <div className="text-white font-bold text-sm mb-3">Settings</div>
+          <button
+            onClick={handleMainMenu}
+            className="w-full bg-slate-700 hover:bg-slate-600 text-white text-sm py-2 px-3 rounded transition-colors text-left"
+          >
+            Main Menu
+          </button>
           <button
             onClick={handleReset}
             className="w-full bg-red-600/20 hover:bg-red-600/30 text-red-400 text-sm py-2 px-3 rounded transition-colors text-left"

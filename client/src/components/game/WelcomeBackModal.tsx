@@ -1,11 +1,13 @@
 import { useIdleIncome } from "@/lib/stores/useIdleIncome";
 import { useStockGame } from "@/lib/stores/useStockGame";
+import { useAppState } from "@/lib/stores/useAppState";
 
 export default function WelcomeBackModal() {
   const { showWelcomeBackModal, pendingOfflineEarnings, collectOfflineEarnings } = useIdleIncome();
   const { cash } = useStockGame();
+  const screen = useAppState(state => state.screen);
   
-  if (!showWelcomeBackModal || pendingOfflineEarnings <= 0) return null;
+  if (!showWelcomeBackModal || pendingOfflineEarnings <= 0 || screen === "tutorial") return null;
   
   const handleCollect = () => {
     const earnings = collectOfflineEarnings();

@@ -1,0 +1,159 @@
+Build a 3D stock broker simulator game project. The player works as a broker and builds a stock portfolio day-by-day. Use ONLY fictional companies/tickers and fictional price data (no real company names, logos, or historical charts). Add a “New Client Capital” button that generates money to trade with.
+
+IMPORTANT CONSTRAINTS
+- No real company names, no real tickers, no real logos, no real market data.
+- All prices and news are procedurally generated or fictional.
+- Include a clear disclaimer in the UI: “All companies and market data are fictional.”
+- Keep the project runnable in Replit (web). Use a browser-friendly 3D approach.
+
+TECH STACK (use this)
+- Use JavaScript/TypeScript + Three.js for 3D.
+- Use Vite for dev server/build.
+- Use a simple UI overlay (HTML/CSS) on top of the 3D scene for menus and trading.
+- Persist game state locally using LocalStorage.
+
+GAME OVERVIEW
+The game is played in “days”.
+Each day:
+1) Start of day: show fictional news/events.
+2) Player can buy/sell fictional stocks.
+3) End of day: prices update, show P/L summary, reputation changes.
+Repeat.
+
+3D SCENE (simple but nice)
+- A small 3D office scene: desk plane, monitor, keyboard blocks, chair block, soft lighting.
+- Camera: slightly angled top-down / desk view.
+- The monitor in 3D should visually exist, but UI interactions can be on the HTML overlay.
+- Add subtle ambient light + directional light. Add a very mild bloom-like feel if easy, otherwise skip.
+
+UI (HTML overlay)
+Create these panels:
+A) Top bar:
+- Day number
+- Cash
+- Portfolio value
+- Reputation (0–100)
+- Career level (Junior, Associate, Senior, Partner)
+
+B) Left panel: “Market”
+- List of fictional stocks with:
+  - Ticker, Company name, Sector
+  - Current price
+  - Daily change (+/- and %)
+- Clicking a stock opens details in the right panel.
+
+C) Right panel: “Trade”
+- Selected stock details:
+  - Price
+  - Small sparkline chart (generated from last 30 fictional points)
+  - Buttons: Buy / Sell
+  - Quantity input
+  - Show estimated cost/proceeds
+- Show current position: shares owned + average cost.
+
+D) Bottom panel: “Daily Feed”
+- News/events and system messages (e.g. “New client onboarded…”)
+
+E) End of Day modal:
+- Summary: day P/L, biggest winner/loser, reputation change
+- Button: “Next Day”
+
+CORE MECHANICS
+1) Fictional Stocks Universe
+Create 12–15 fictional stocks. Use these (exact names/tickers):
+1. NORDLITE SYSTEMS (NLSY) – Logistics software
+2. VANTA CLOUDWORKS (VCLD) – Cloud infrastructure
+3. KERNEL FORGE (KFRG) – Industrial cybersecurity
+4. HALBERG INDUSTRIES (HLBG) – Factory automation components
+5. AURORA GRID CO (AGCO) – Power distribution & grid services
+6. SOLVEX MATERIALS (SLVX) – Battery materials tech
+7. BRONZE HARBOR FINANCE (BHFN) – Regional finance
+8. MINTBRIDGE PAYMENTS (MBPY) – Payments infrastructure
+9. ORCHARD INSURE GROUP (OIGR) – Insurance
+10. CIRRUS MEDICAL (CRMD) – Medtech devices
+11. FJORD FRESH FOODS (FJFF) – Consumer foods
+12. LUMINA RETAIL LABS (LRLB) – Retail analytics
+13. SKYHARBOR MOBILITY (SHMB) – Urban mobility fleets
+14. TIDEWAY SHIPPING (TWSH) – Shipping & logistics
+15. PINNACLE TELECOM (PNTL) – Telecom services
+
+2) Price Simulation (fictional)
+- Initialize each stock with a starting price (e.g. 10–250).
+- Each end-of-day update:
+  - Apply random daily return based on volatility per stock (tech higher, utilities/telecom lower).
+  - Apply an event modifier if a news event triggers.
+- Keep a rolling price history array for each stock (at least 30 points) for the sparkline.
+
+3) Portfolio & Trading
+- Player starts with some cash (e.g. 100,000).
+- Allow Buy/Sell:
+  - Buy reduces cash, increases shares, updates average cost.
+  - Sell increases cash, reduces shares; realized P/L tracked.
+- Show total portfolio value = cash + sum(shares * currentPrice).
+- Track daily P/L and total P/L.
+
+4) New Client Capital Button (money generation)
+Add a prominent button on the UI (top bar or market panel) labeled:
+“New Client”
+Rules:
+- Gives additional cash once per in-game day (cooldown resets next day).
+- Amount depends on career level:
+  - Junior: +50,000
+  - Associate: +250,000
+  - Senior: +1,000,000
+  - Partner: +5,000,000
+- When clicked:
+  - Add cash
+  - Add a log message in “Daily Feed”:
+    “New client onboarded. Capital added to account.”
+  - Provide subtle feedback (button briefly highlights, optional small sound).
+- Disable the button after use that day and show “Available tomorrow”.
+
+5) Career Level & Reputation
+- Reputation starts at 50.
+- Update reputation at end of day based on daily P/L:
+  - If day return positive: +1 to +3
+  - If negative: -1 to -3
+- Career level thresholds:
+  - Junior: rep 0–59
+  - Associate: rep 60–74
+  - Senior: rep 75–89
+  - Partner: rep 90–100
+- Career level affects New Client Capital payouts.
+
+6) Fictional News / Events
+- Each day generate 1–3 news items:
+  - Macro (rates, inflation) as flavor text
+  - Sector news (shipping rates, battery subsidy, cyber incident)
+  - Company-specific event for 0–2 tickers
+- Events apply a temporary modifier to daily return for impacted tickers (positive or negative).
+- Show news items in the Daily Feed at start of day.
+
+PERSISTENCE
+- Save and load:
+  - day number
+  - cash
+  - positions
+  - average costs
+  - price history
+  - reputation
+  - whether New Client was used today
+- Use localStorage. Provide “Reset Save” in a small settings menu.
+
+DELIVERABLES
+- Provide a complete Replit-ready project with:
+  - package.json
+  - Vite config
+  - Three.js scene
+  - UI overlay
+  - Game state logic in clean modules/files
+- Include a README with:
+  - how to run (npm install, npm run dev)
+  - controls
+  - how the fictional market works
+- Ensure it runs without errors and looks clean on mobile viewport too.
+
+QUALITY NOTES
+- Keep code readable.
+- Use simple, consistent styling.
+- Make sure the New Client Capital logic is bug-free and resets correctly each new day.

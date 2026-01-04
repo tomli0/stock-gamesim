@@ -186,7 +186,7 @@ function generateDailyNews(stocks: Stock[]): { news: NewsItem[], modifiers: Map<
     });
   }
   
-  const sectors = [...new Set(stocks.map(s => s.sector))];
+  const sectors = Array.from(new Set(stocks.map(s => s.sector)));
   if (Math.random() < 0.5) {
     const sector = sectors[Math.floor(Math.random() * sectors.length)];
     const sectorNewsList = SECTOR_NEWS[sector];

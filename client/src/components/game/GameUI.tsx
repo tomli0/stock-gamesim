@@ -5,22 +5,18 @@ import DailyFeed from "./DailyFeed";
 import EndOfDayModal from "./EndOfDayModal";
 import SettingsMenu from "./SettingsMenu";
 import Disclaimer from "./Disclaimer";
+import ResizablePanels from "./ResizablePanels";
 
 export default function GameUI() {
   return (
-    <div className="fixed inset-0 flex flex-col pointer-events-auto z-10">
+    <div className="fixed inset-0 flex flex-col pointer-events-auto z-10 overflow-x-hidden">
       <TopBar />
       
-      <div className="flex-1 flex overflow-hidden">
-        <div className="w-64 flex-shrink-0">
-          <MarketPanel />
-        </div>
-        
-        <div className="flex-1" />
-        
-        <div className="w-56 flex-shrink-0">
-          <TradePanel />
-        </div>
+      <div className="flex-1 overflow-hidden">
+        <ResizablePanels
+          leftPanel={<MarketPanel />}
+          rightPanel={<TradePanel />}
+        />
       </div>
       
       <div className="h-32 flex-shrink-0">

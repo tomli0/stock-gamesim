@@ -1,0 +1,55 @@
+Implement a draggable vertical splitter between the Market and Trade columns so the user can resize the panels horizontally (especially on mobile).
+
+CURRENT ISSUE:
+On small screens, the fixed two-column layout causes the Trade panel (Buy/Sell) to be partially off-screen.
+
+GOAL:
+Allow the user to drag the column divider to give more space to Trade, without switching to a separate swipe/tab view.
+
+REQUIREMENTS:
+
+1) Layout Refactor (Resizable Columns)
+- Wrap Market + Splitter + Trade in a parent container.
+- Use CSS grid or flexbox with a CSS variable controlling Market width:
+  - Example: --marketWidth: 45%;
+  - Market width = var(--marketWidth)
+  - Trade width = calc(100% - var(--marketWidth) - splitterWidth)
+
+2) Splitter Handle
+- The divider line becomes a draggable handle:
+  - width: 12–16px (easy to grab)
+  - visually shows a thin line in center + subtle “grip” dots
+  - cursor: col-resize on desktop
+- On mobile, handle must be finger-friendly.
+
+3) Drag Interaction
+- Support mouse drag (desktop) and touch drag (mobile).
+- On drag:
+  - compute new market width in pixels or percent relative to container width
+  - update --marketWidth in real-time
+- Add clamping:
+  - Market min: 20%
+  - Market max: 70%
+  - (so Trade always has enough room for Buy/Sell)
+
+4) Persistence
+- Save the chosen width in localStorage (e.g. “ui.marketWidth”).
+- Load it on startup.
+
+5) Mobile Defaults & Safety
+- On screens <= 820px:
+  - default market width should be smaller (e.g. 32–40%) so Trade is usable.
+- Ensure no horizontal page scrolling:
+  - body { overflow-x: hidden; }
+- Ensure Buy/Sell buttons remain fully visible within Trade panel width.
+
+6) Optional Collapse (Nice-to-have)
+- Add a double-tap or small button on the splitter to collapse/expand Market:
+  - collapsed market width: 0% (or 10% peek)
+  - expanded restores last width
+- This is optional, implement only if quick.
+
+DELIVERABLE:
+- A reliable resizable splitter that works on mobile and desktop.
+- Trade panel must always be reachable and fully visible after resizing.
+- Keep existing UI and logic unchanged besides layout.

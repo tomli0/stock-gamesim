@@ -137,7 +137,7 @@ export default function TutorialOverlay() {
 
   return (
     <div className="fixed inset-0 z-[60] pointer-events-none">
-      <div className="absolute inset-0 bg-black/50 pointer-events-auto" />
+      <div className="absolute inset-0 bg-black/30 pointer-events-none" />
       
       <div className={`absolute ${getTooltipPosition()} bg-slate-900 border border-blue-500 rounded-lg p-6 max-w-sm shadow-2xl shadow-blue-500/20 pointer-events-auto z-[70]`}>
         <div className="flex items-center gap-2 mb-1">

@@ -1,0 +1,196 @@
+Upgrade the existing fictional stock broker game into a hybrid Idle + Trading game.
+The game must reward:
+- being in the game (idle income)
+- optional active tapping (temporary boosts)
+- smart trading decisions (largest gains)
+while keeping everything fictional.
+
+CRITICAL RULES
+- Keep all companies/tickers fictional (use the existing in-game list).
+- No real market data, no real company names, no real logos.
+- Do NOT turn this into an educational app. Keep it “gamey”.
+- Trading must remain the main source of big gains.
+- Idle/tap rewards must be meaningful but not dominant.
+- Must work in Replit as a web app (Vite + TS + Three.js or current stack).
+- Persist all progress using localStorage.
+
+--------------------------------------------
+A) NEW SYSTEMS TO IMPLEMENT
+--------------------------------------------
+
+1) IDLE INCOME (CORE IDLE LOOP)
+Add a “Fund Income” system that generates cash automatically over time.
+
+- Player has:
+  - cash
+  - portfolio holdings (as now)
+  - reputation (0–100) and career level (as now or similar)
+  - NEW: AUM (Assets Under Management) or “Fund Size”
+  - NEW: idleIncomePerSecond (derived from Fund Size + career level)
+
+Idle rules:
+- Idle income accrues every second while the game is open.
+- Offline earnings accrue when the player is away:
+  - compute time since last save
+  - award offline earnings with a cap (e.g., max 8 hours)
+- Show a “Welcome Back” modal when returning:
+  - “Your fund earned $X while you were away”
+  - Button: “Collect”
+
+Balance target:
+- Idle income should feel rewarding, but smaller than skilled trading over time.
+- Example starting values:
+  - Junior: $1–$5 per second
+  - Associate: $5–$15 per second
+  - Senior: $20–$60 per second
+  - Partner: $100–$300 per second
+Tune as needed.
+
+2) ACTIVE TAP BOOST (“DESK WORK”)
+Add an optional tapping mechanic that increases idle income temporarily.
+
+Mechanic:
+- Button labeled “Desk Work” or “Trade Desk Ops”
+- Each tap adds a temporary boost to idle income, stacking up to a cap.
+- Example:
+  - Each tap adds +2% to idle income for 10 seconds
+  - Max boost: +100%
+  - Boost decays smoothly over time (timer-based).
+- Tapping should NOT directly add cash (it boosts idle only).
+- Provide satisfying but subtle feedback:
+  - button press animation
+  - small sound (toggleable)
+  - tiny particle pop (optional)
+
+3) ADS-STYLE REWARDED MULTIPLIERS (MOCK)
+Since Replit cannot show real ads, implement “Rewarded Boost” as a mocked flow.
+
+Add buttons in a “Boosts” panel:
+- “Watch Ad: x2 Fund Income (30 min)”
+- “Watch Ad: Instant Collect Offline Earnings”
+- “Watch Ad: +20% Fund Cap for 30 min” (optional)
+
+Mock behavior:
+- Clicking a rewarded boost shows a modal:
+  “Watch ad to activate boost?” -> “Simulate Watch” -> success
+- Persist cooldowns and active boost timers in localStorage.
+
+Rules:
+- x2 Fund Income can be activated 1 time per hour (cooldown).
+- Instant Collect can be used 1 time per day.
+- Cap boost (if implemented) can be used 1 time per day.
+
+4) FUND SIZE / AUM GROWTH
+Introduce a “Fund Size” metric that drives idle income.
+
+- Fund Size increases via:
+  - career progression
+  - sustained positive performance
+  - client onboarding events (NOT a simple daily free button)
+- Convert part of trading success into fund growth:
+  - e.g., at end of day, if daily return positive, increase Fund Size slightly
+  - if strong drawdown, reduce Fund Size
+- Keep it simple:
+  - Fund Size = base + performance factor + career multiplier
+
+Display:
+- Show Fund Size prominently in the top bar or a sidebar.
+
+5) KEEP TRADING AS THE MAIN GAME
+Preserve current market/trading loop:
+- buy/sell
+- end-of-day price updates
+- market regimes + news if already present
+- portfolio value calculations
+- risk consequences (margin warnings etc.) if already implemented
+
+Balance:
+- Skilled trading should outpace idle.
+- Idle provides “always progress” and recovery path.
+
+--------------------------------------------
+B) UI REQUIREMENTS
+--------------------------------------------
+
+Add these UI components (keep existing styling):
+
+1) Top Bar additions:
+- Fund Size (AUM)
+- Fund Income/sec
+- Active Boost indicator (e.g., “x2 Income 12:34”)
+
+2) New panel or section:
+- “Fund Income”
+  - shows current income/sec
+  - shows boost meter from tapping
+  - button: “Desk Work” (tap boost)
+
+3) Boosts panel:
+- shows available rewarded boosts
+- shows cooldown timers
+- shows active boost timers
+
+4) Welcome Back modal:
+- appears on load if offline earnings > 0
+- shows amount and “Collect” button
+
+Mobile:
+- Ensure these panels fit within existing responsive layout.
+- No overflow off-screen.
+
+--------------------------------------------
+C) PERSISTENCE
+--------------------------------------------
+
+Store and restore:
+- cash
+- portfolio holdings
+- prices/history
+- day number
+- reputation & career
+- Fund Size
+- idle income state
+- tap boost state (current stack + decay timers)
+- active rewarded boosts (start time, duration)
+- cooldown timers
+- lastActiveTimestamp (for offline earnings)
+
+--------------------------------------------
+D) IMPLEMENTATION NOTES (IMPORTANT)
+--------------------------------------------
+
+- Implement a central game loop/tick:
+  - requestAnimationFrame or setInterval at 1s resolution for idle accrual.
+- Use deterministic timer math based on timestamps (Date.now) rather than relying on perfect intervals.
+- Keep calculations stable and avoid floating-point drift:
+  - store money as cents (integers) if possible.
+
+Offline earnings:
+- offlineSeconds = min(now - lastActive, capSeconds)
+- offlineEarned = idleIncomePerSecond * offlineSeconds * activeMultiplierAtExit
+- If multiplier timers expire during offline time, approximate:
+  - simplest: apply multiplier only if it was active at exit (acceptable for MVP)
+  - better: split into segments (optional)
+
+--------------------------------------------
+E) DELIVERABLES
+--------------------------------------------
+
+- Update the existing project with:
+  - Idle income working live and offline
+  - Tap-to-boost working with decay + cap
+  - Mock rewarded boosts with timers & cooldowns
+  - UI panels and indicators
+  - Everything persisted in localStorage
+- Do NOT remove or break trading systems.
+- Provide a short README update explaining:
+  - idle income
+  - tapping boost
+  - rewarded boosts
+  - how offline earnings work
+
+QUALITY BAR
+- The game should feel rewarding even when not trading.
+- Trading still provides the biggest “wow” gains.
+- No cluttered UI; keep it clean and readable.
+- Ensure mobile usability.

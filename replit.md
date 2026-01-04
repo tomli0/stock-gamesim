@@ -4,7 +4,31 @@
 
 Market Desk Simulator is a 3D stock broker simulator game where players work as a broker building a stock portfolio day-by-day. The game uses fictional companies, tickers, and procedurally generated market data. Players can buy/sell stocks, manage their portfolio, track reputation, and progress through career levels from Junior to Partner.
 
+The game features a hybrid Idle + Trading system where players earn passive income from their fund while also actively trading for larger gains.
+
 The application is built as a full-stack web application with a React frontend featuring Three.js for 3D rendering and an Express backend. Game state is persisted locally using LocalStorage.
+
+## Idle Income System
+
+### Fund Income
+- Players earn passive income every second based on their Fund Size and career level
+- Income rates scale with career progression (Junior: $1-5/s, Associate: $5-15/s, Senior: $20-60/s, Partner: $100-300/s)
+- Fund Size grows based on positive trading performance
+
+### Tap Boost ("Desk Work")
+- Players can tap the "Desk Work" button to temporarily boost idle income
+- Each tap adds +2% to income for a short duration (max +100%)
+- Boost decays over time when not tapping
+
+### Offline Earnings
+- Players earn income while away (up to 8 hours maximum)
+- A "Welcome Back" modal shows accumulated earnings when returning
+- Offline earnings are based on base income rate at time of exit
+
+### Rewarded Boosts (Mock)
+- "Double Fund Income" - 2x income for 30 minutes (1 hour cooldown)
+- "Instant Offline Collect" - Collect max offline earnings instantly (24 hour cooldown)
+- Boosts use a mock "Watch Ad" flow for activation
 
 ## User Preferences
 
@@ -27,9 +51,15 @@ Preferred communication style: Simple, everyday language.
 - **Vite middleware**: Development mode hot module replacement
 
 ### Data Storage
-- **LocalStorage**: Client-side persistence for game saves (day, cash, positions, stocks, reputation)
+- **LocalStorage**: Client-side persistence for game saves (day, cash, positions, stocks, reputation, idle state)
 - **PostgreSQL with Drizzle ORM**: Database schema defined but primarily used for user management, not core game state
 - **In-memory storage**: Server-side fallback storage implementation for user data
+
+### Idle Income Store (`useIdleIncome`)
+- Fund Size and base income per second
+- Tap boost state (current percentage, decay rate)
+- Rewarded boost timers and cooldowns
+- Last active timestamp for offline earnings calculation
 
 ### Project Structure
 ```
@@ -44,9 +74,10 @@ migrations/       # Drizzle database migrations
 ```
 
 ### Key Design Patterns
-- **Component-based UI**: Modular game panels (TopBar, MarketPanel, TradePanel, DailyFeed)
+- **Component-based UI**: Modular game panels (TopBar, MarketPanel, TradePanel, DailyFeed, FundIncomePanel, BoostsPanel)
 - **Store-based state**: Centralized game state with computed values and actions
 - **Path aliases**: `@/` for client sources, `@shared/` for shared code
+- **Game loop tick**: 1-second interval for idle income accrual with timestamp-based math
 
 ## External Dependencies
 

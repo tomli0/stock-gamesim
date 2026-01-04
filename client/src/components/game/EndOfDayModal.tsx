@@ -1,4 +1,6 @@
 import { useStockGame } from "@/lib/stores/useStockGame";
+import { useIdleIncome } from "@/lib/stores/useIdleIncome";
+import { useEffect, useState } from "react";
 
 export default function EndOfDayModal() {
   const { 
@@ -10,7 +12,35 @@ export default function EndOfDayModal() {
     stocks,
     positions,
     startNewDay,
+    getPortfolioValue,
+    getTotalValue,
   } = useStockGame();
+  
+  const { fundSize, applyTradingPerformance } = useIdleIncome();
+  const [fundGrowth, setFundGrowth] = useState(0);
+  const [hasAppliedGrowth, setHasAppliedGrowth] = useState(false);
+  
+  useEffect(() => {
+    if (showEndOfDayModal && !hasAppliedGrowth) {
+      const totalValue = getTotalValue();
+      const portfolioValue = getPortfolioValue();
+      const dailyReturn = totalValue > 0 ? dailyPnL / totalValue : 0;
+      const prevFundSize = fundSize;
+      
+      applyTradingPerformance(dailyReturn, portfolioValue);
+      
+      const newFundSize = useIdleIncome.getState().fundSize;
+      setFundGrowth(newFundSize - prevFundSize);
+      setHasAppliedGrowth(true);
+    }
+  }, [showEndOfDayModal, hasAppliedGrowth, dailyPnL, getTotalValue, getPortfolioValue, fundSize, applyTradingPerformance]);
+  
+  useEffect(() => {
+    if (!showEndOfDayModal) {
+      setHasAppliedGrowth(false);
+      setFundGrowth(0);
+    }
+  }, [showEndOfDayModal]);
   
   if (!showEndOfDayModal) return null;
   
@@ -66,10 +96,18 @@ export default function EndOfDayModal() {
             </div>
           )}
           
-          <div className="bg-slate-800/50 rounded-lg p-4">
-            <div className="text-slate-400 text-sm mb-1">Reputation Change</div>
-            <div className={`text-lg font-bold ${repChange >= 0 ? "text-green-400" : "text-red-400"}`}>
-              {repChange >= 0 ? "+" : ""}{repChange}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-slate-800/50 rounded-lg p-3">
+              <div className="text-slate-400 text-xs mb-1">Reputation</div>
+              <div className={`text-lg font-bold ${repChange >= 0 ? "text-green-400" : "text-red-400"}`}>
+                {repChange >= 0 ? "+" : ""}{repChange}
+              </div>
+            </div>
+            <div className="bg-slate-800/50 rounded-lg p-3">
+              <div className="text-slate-400 text-xs mb-1">Fund Growth</div>
+              <div className={`text-lg font-bold ${fundGrowth >= 0 ? "text-purple-400" : "text-red-400"}`}>
+                {fundGrowth >= 0 ? "+" : ""}${Math.abs(fundGrowth).toFixed(0)}
+              </div>
             </div>
           </div>
           

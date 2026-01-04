@@ -2,7 +2,12 @@ import { useStockGame } from "@/lib/stores/useStockGame";
 import { useIdleIncome } from "@/lib/stores/useIdleIncome";
 import { useState, useEffect } from "react";
 
-export default function TopBar() {
+interface TopBarProps {
+  onOpenShop?: () => void;
+  onOpenProfile?: () => void;
+}
+
+export default function TopBar({ onOpenShop, onOpenProfile }: TopBarProps) {
   const { 
     day, 
     cash, 
@@ -126,6 +131,26 @@ export default function TopBar() {
         >
           {newClientUsedToday ? "Tomorrow" : "+ Client"}
         </button>
+        
+        {onOpenProfile && (
+          <button
+            onClick={onOpenProfile}
+            className="px-2 py-1 rounded font-semibold text-xs bg-blue-600 hover:bg-blue-500 text-white transition-colors"
+            title="Profile"
+          >
+            Profile
+          </button>
+        )}
+        
+        {onOpenShop && (
+          <button
+            onClick={onOpenShop}
+            className="px-2 py-1 rounded font-semibold text-xs bg-purple-600 hover:bg-purple-500 text-white transition-colors"
+            title="Shop"
+          >
+            Shop
+          </button>
+        )}
       </div>
     </div>
   );

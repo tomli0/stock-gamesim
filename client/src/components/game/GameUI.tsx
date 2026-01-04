@@ -1,3 +1,4 @@
+import { useState } from "react";
 import TopBar from "./TopBar";
 import MarketPanel from "./MarketPanel";
 import TradePanel from "./TradePanel";
@@ -10,14 +11,31 @@ import WelcomeBackModal from "./WelcomeBackModal";
 import FundIncomePanel from "./FundIncomePanel";
 import BoostsPanel from "./BoostsPanel";
 import MobileIdlePanel from "./MobileIdlePanel";
+import ShopScreen from "./ShopScreen";
+import ProfileScreen from "./ProfileScreen";
 import { useIdleGameLoop } from "@/hooks/useIdleGameLoop";
 
+type ActiveScreen = "game" | "shop" | "profile";
+
 export default function GameUI() {
+  const [activeScreen, setActiveScreen] = useState<ActiveScreen>("game");
+  
   useIdleGameLoop();
+  
+  if (activeScreen === "shop") {
+    return <ShopScreen onClose={() => setActiveScreen("game")} />;
+  }
+  
+  if (activeScreen === "profile") {
+    return <ProfileScreen onClose={() => setActiveScreen("game")} />;
+  }
   
   return (
     <div className="fixed inset-0 flex flex-col pointer-events-auto z-10 overflow-x-hidden">
-      <TopBar />
+      <TopBar 
+        onOpenShop={() => setActiveScreen("shop")}
+        onOpenProfile={() => setActiveScreen("profile")}
+      />
       
       <div className="flex-1 overflow-hidden flex">
         <div className="flex-1 overflow-hidden">

@@ -30,6 +30,31 @@ The application is built as a full-stack web application with a React frontend f
 - "Instant Offline Collect" - Collect max offline earnings instantly (24 hour cooldown)
 - Boosts use a mock "Watch Ad" flow for activation
 
+## Lifestyle Shop & Trader Profile
+
+### Shop System
+- 24 cosmetic items across 4 categories: watches, cars, art, office decor
+- Rarity tiers: Common, Rare, Epic, Legendary with color-coded styling
+- Career-gated purchases: Some items require Associate, Senior, or Partner level
+- Price ranges from $5,000 (common) to $10,000,000+ (legendary)
+- Purchases deduct from cash via `spendCash()` store action with persistence
+
+### Trader Profile
+- Editable player name and tagline
+- Career stats display: reputation, fund size, cash, net worth
+- Equipped item slots for each category (watch, car, art, office)
+- Inventory management with equip/unequip functionality
+
+### 3D Office Integration
+- Equipped art appears as a framed picture on the office wall
+- Equipped office decor displays on the desk
+- Equipped watch shows as a display on the desk
+- Items use rarity-based colors with subtle glow effects
+
+### Persistence
+- Player profile stored separately in `market-desk-profile` localStorage key
+- Includes name, tagline, owned items, equipped items
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
@@ -74,10 +99,11 @@ migrations/       # Drizzle database migrations
 ```
 
 ### Key Design Patterns
-- **Component-based UI**: Modular game panels (TopBar, MarketPanel, TradePanel, DailyFeed, FundIncomePanel, BoostsPanel)
+- **Component-based UI**: Modular game panels (TopBar, MarketPanel, TradePanel, DailyFeed, FundIncomePanel, BoostsPanel, ShopScreen, ProfileScreen)
 - **Store-based state**: Centralized game state with computed values and actions
 - **Path aliases**: `@/` for client sources, `@shared/` for shared code
 - **Game loop tick**: 1-second interval for idle income accrual with timestamp-based math
+- **Cosmetics system**: Separate profile store (`usePlayerProfile`) with item catalog (`catalog.ts`)
 
 ## External Dependencies
 

@@ -1,6 +1,8 @@
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { usePlayerProfile } from "@/lib/stores/usePlayerProfile";
+import { getItemById, ItemRarity } from "@/lib/shop/catalog";
 
 function Desk() {
   return (
@@ -219,6 +221,109 @@ function Plant() {
   );
 }
 
+const RARITY_FRAME_COLORS: Record<ItemRarity, string> = {
+  common: "#666666",
+  rare: "#3b82f6",
+  epic: "#a855f7",
+  legendary: "#f59e0b",
+};
+
+const RARITY_ART_COLORS: Record<ItemRarity, string> = {
+  common: "#4a5568",
+  rare: "#2563eb",
+  epic: "#7c3aed",
+  legendary: "#d97706",
+};
+
+function ArtFrame() {
+  const { equipped } = usePlayerProfile();
+  const artItem = useMemo(() => {
+    if (!equipped.art) return null;
+    return getItemById(equipped.art);
+  }, [equipped.art]);
+  
+  if (!artItem) return null;
+  
+  const frameColor = RARITY_FRAME_COLORS[artItem.rarity];
+  const artColor = RARITY_ART_COLORS[artItem.rarity];
+  
+  return (
+    <group position={[-1.5, 1.8, -1.95]}>
+      <mesh castShadow>
+        <boxGeometry args={[0.8, 0.6, 0.05]} />
+        <meshStandardMaterial color={frameColor} roughness={0.4} metalness={0.3} />
+      </mesh>
+      <mesh position={[0, 0, 0.03]}>
+        <boxGeometry args={[0.7, 0.5, 0.01]} />
+        <meshStandardMaterial 
+          color={artColor} 
+          roughness={0.5}
+          emissive={artColor}
+          emissiveIntensity={0.1}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+function DeskDecor() {
+  const { equipped } = usePlayerProfile();
+  const officeItem = useMemo(() => {
+    if (!equipped.office) return null;
+    return getItemById(equipped.office);
+  }, [equipped.office]);
+  
+  if (!officeItem) return null;
+  
+  const decorColor = RARITY_FRAME_COLORS[officeItem.rarity];
+  
+  return (
+    <group position={[-0.5, 0.5, -0.2]}>
+      <mesh castShadow>
+        <boxGeometry args={[0.08, 0.12, 0.08]} />
+        <meshStandardMaterial 
+          color={decorColor} 
+          roughness={0.3} 
+          metalness={0.6}
+          emissive={decorColor}
+          emissiveIntensity={0.15}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+function WatchDisplay() {
+  const { equipped } = usePlayerProfile();
+  const watchItem = useMemo(() => {
+    if (!equipped.watch) return null;
+    return getItemById(equipped.watch);
+  }, [equipped.watch]);
+  
+  if (!watchItem) return null;
+  
+  const watchColor = RARITY_FRAME_COLORS[watchItem.rarity];
+  
+  return (
+    <group position={[0.6, 0.5, -0.2]}>
+      <mesh castShadow>
+        <cylinderGeometry args={[0.04, 0.04, 0.02, 16]} />
+        <meshStandardMaterial 
+          color={watchColor} 
+          roughness={0.2} 
+          metalness={0.8}
+          emissive={watchColor}
+          emissiveIntensity={0.1}
+        />
+      </mesh>
+      <mesh position={[0, 0.015, 0]}>
+        <cylinderGeometry args={[0.03, 0.03, 0.01, 16]} />
+        <meshStandardMaterial color="#1a1a2e" roughness={0.1} />
+      </mesh>
+    </group>
+  );
+}
+
 export default function OfficeScene() {
   return (
     <>
@@ -249,6 +354,10 @@ export default function OfficeScene() {
       <Papers />
       <Bookshelf />
       <Plant />
+      
+      <ArtFrame />
+      <DeskDecor />
+      <WatchDisplay />
     </>
   );
 }

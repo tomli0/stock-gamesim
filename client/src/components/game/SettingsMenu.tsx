@@ -2,12 +2,14 @@ import { useState } from "react";
 import { useStockGame } from "@/lib/stores/useStockGame";
 import { useAppState } from "@/lib/stores/useAppState";
 import { useIdleIncome } from "@/lib/stores/useIdleIncome";
+import { usePlayerProfile } from "@/lib/stores/usePlayerProfile";
 
 export default function SettingsMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const { resetGame } = useStockGame();
   const { setScreen } = useAppState();
   const { saveIdleState } = useIdleIncome();
+  const { resetCosmetics, ownedItemIds } = usePlayerProfile();
   
   const handleMainMenu = () => {
     saveIdleState();
@@ -15,10 +17,22 @@ export default function SettingsMenu() {
     setIsOpen(false);
   };
   
+  const handleResetCosmetics = () => {
+    if (ownedItemIds.length === 0) {
+      alert("You don't own any cosmetic items.");
+      return;
+    }
+    if (confirm("Are you sure you want to reset all cosmetic items? Your purchased items will be removed but your cash will NOT be refunded.")) {
+      resetCosmetics();
+      setIsOpen(false);
+    }
+  };
+  
   const handleReset = () => {
     if (confirm("Are you sure you want to reset your game? All progress will be lost.")) {
       resetGame();
       useIdleIncome.getState().resetIdleState();
+      usePlayerProfile.getState().resetCosmetics();
       setIsOpen(false);
     }
   };
@@ -44,6 +58,12 @@ export default function SettingsMenu() {
             className="w-full bg-slate-700 hover:bg-slate-600 text-white text-sm py-2 px-3 rounded transition-colors text-left"
           >
             Main Menu
+          </button>
+          <button
+            onClick={handleResetCosmetics}
+            className="w-full bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 text-sm py-2 px-3 rounded transition-colors text-left"
+          >
+            Reset Cosmetics
           </button>
           <button
             onClick={handleReset}

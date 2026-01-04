@@ -1,0 +1,222 @@
+Add a “Lifestyle Shop” + “Trader Profile” system to the existing Idle + Trading game.
+
+CRITICAL RULES
+- The shop is cosmetic/status only. NO gameplay advantages:
+  - No trading bonuses
+  - No higher win rates
+  - No direct income multipliers
+  - No better prices
+- Items are “luxury/status” (paintings, cars, watches, office decor).
+- Items should be visible on a Profile screen and (optionally) reflected in the 3D office scene as simple props.
+- Use ONLY in-game currency (cash). No real IAP implementation in Replit.
+- Persist ownership and equipped items in localStorage.
+- Keep UI mobile-friendly and consistent with the current dark theme.
+
+GOAL
+Create an addictive “numbers go up → buy luxury → show off your trader identity” loop without making the game pay-to-win.
+
+--------------------------------------------
+A) NEW SCREENS / NAVIGATION
+--------------------------------------------
+
+1) Add a new top-level navigation:
+- Market / Trade (existing)
+- News (existing if present)
+- Boosts (existing if present)
+- NEW: Profile
+- NEW: Shop
+
+If you use a responsive layout:
+- On mobile: these are tabs or a compact top nav.
+- On desktop: sidebar buttons or top nav.
+
+--------------------------------------------
+B) TRADER PROFILE SCREEN
+--------------------------------------------
+
+Create a “Profile” screen showing:
+
+1) Identity
+- Player name (editable)
+- Current title (derived from career level)
+- Optional tagline (editable)
+
+2) Career & Performance
+- Career level (Junior, Associate, PM, Senior PM, Partner)
+- Reputation (0–100)
+- Fund Size (AUM)
+- Total net worth (cash + portfolio value)
+- Best day / worst day stats (optional if already tracked)
+
+3) Equipped Lifestyle Items (with slots)
+- Watch slot (1 equipped)
+- Car slot (1 equipped)
+- Art slot (1 equipped)
+- Office decor slot (1 equipped)
+
+Each slot shows:
+- Item image/icon
+- Item name
+- Rarity color (common/rare/epic/legendary)
+- Button: “Change”
+
+Include a simple “Inventory” section or “Manage” modal:
+- list owned items by category
+- Equip/Unequip buttons
+
+--------------------------------------------
+C) SHOP SCREEN (LIFESTYLE SHOP)
+--------------------------------------------
+
+Create a “Shop” screen with:
+
+1) Categories (tabs or segmented control)
+- Watches
+- Cars
+- Art
+- Office
+
+2) Shop item cards showing:
+- Item name
+- Category
+- Price (cash)
+- Rarity badge
+- Short flavor description (1 line)
+- Requirements (career gate):
+  - e.g., “Requires Associate” / “Requires Senior PM”
+- Purchase button:
+  - Disabled if insufficient cash or requirements not met
+- If owned: show “Owned” and button “Equip”
+
+3) Shop economy rules
+- Purchases subtract from cash immediately.
+- Items are permanent once purchased.
+- Items can be equipped/unequipped freely.
+- Cosmetic only (no hidden modifiers).
+
+4) Anti-frustration
+- Allow sorting:
+  - Price low→high
+  - Rarity
+  - Owned first
+- Clear feedback:
+  - toast: “Purchased: [Item]”
+  - toast: “Equipped: [Item]”
+  - error: “Insufficient funds” / “Career level required”
+
+--------------------------------------------
+D) ITEM CATALOG (STARTER SET)
+--------------------------------------------
+
+Implement a starter catalog (at least 24 items) with escalating prices and career gates.
+Use these examples (you can add more, but include at least these):
+
+RARITY LEVELS:
+- Common, Rare, Epic, Legendary
+
+Watches:
+1. Metro Quartz (Common) $25,000 – Junior
+2. Harbor Automatic (Common) $60,000 – Junior
+3. Chrono Steel (Rare) $150,000 – Associate
+4. Night Dial GMT (Rare) $250,000 – Associate
+5. Aurora Skeleton (Epic) $800,000 – Portfolio Manager
+6. Platinum Legacy (Legendary) $2,500,000 – Senior PM
+
+Cars:
+1. Compact Street (Common) $120,000 – Junior
+2. Executive Sedan (Rare) $450,000 – Associate
+3. Grand Touring Coupe (Epic) $1,800,000 – Portfolio Manager
+4. Track Hyper (Legendary) $7,500,000 – Fund Partner
+
+Art:
+1. Minimal Horizon Print (Common) $30,000 – Junior
+2. Abstract Market Lines (Rare) $220,000 – Associate
+3. “Volatility” Canvas Series (Epic) $950,000 – Portfolio Manager
+4. “The Alpha” Original (Legendary) $3,800,000 – Senior PM
+
+Office:
+1. Walnut Desk Set (Common) $40,000 – Junior
+2. Neon Ticker Sign (Rare) $180,000 – Associate
+3. Marble Sculpture (Epic) $1,200,000 – Portfolio Manager
+4. Private Office Upgrade (Legendary) $5,000,000 – Senior PM
+
+Add additional items to reach 24+ total:
+- duplicates with different names/prices
+- keep everything fictional
+
+IMPORTANT:
+- Prices must be high enough that buying luxury feels like a goal.
+- Early items must be attainable within a few sessions.
+
+--------------------------------------------
+E) TITLES & CAREER LEVELS
+--------------------------------------------
+
+Define titles linked to career levels (shown on Profile):
+- Junior Trader: “Junior Trader”
+- Associate: “Associate Broker”
+- Portfolio Manager: “Portfolio Manager”
+- Senior PM: “Senior Portfolio Manager”
+- Fund Partner: “Fund Partner”
+
+Optional: add “style titles” unlocked by play patterns (no purchase required), e.g.:
+- “Risk Taker” (uses leverage often)
+- “Steady Hands” (low drawdown streak)
+(Only if easy; otherwise skip for MVP.)
+
+--------------------------------------------
+F) OPTIONAL: VISUAL INTEGRATION IN 3D OFFICE (LIGHTWEIGHT)
+--------------------------------------------
+
+If the 3D office scene exists:
+- Show a simple representation of equipped items:
+  - Art: change a “frame” texture/color on wall
+  - Office: add a small desk prop color variant
+  - Car/Watch: show as icon on monitor or shelf object
+Keep it simple—do not block shipping if this is hard.
+
+--------------------------------------------
+G) DATA MODEL & PERSISTENCE
+--------------------------------------------
+
+Add a “playerProfile” structure:
+- name: string
+- tagline: string
+- equipped: { watchId, carId, artId, officeId }
+- ownedItemIds: string[]
+- careerLevel: enum
+- reputation, fundSize, etc. (existing)
+
+Persist via localStorage:
+- owned items
+- equipped items
+- name/tagline
+
+Include a “Reset Cosmetics” option in Settings:
+- clears owned/equipped items only (with confirmation)
+
+--------------------------------------------
+H) IMPLEMENTATION QUALITY
+--------------------------------------------
+
+- Keep code modular:
+  - src/shop/catalog.ts (item list)
+  - src/shop/shopLogic.ts (purchase/equip)
+  - src/ui/profile.ts
+  - src/ui/shop.ts
+- Use strict checks:
+  - cannot purchase if not enough cash
+  - cannot purchase if career gate not met
+  - cannot equip if not owned
+- Provide clean UI states:
+  - disabled buttons
+  - clear toasts/messages
+  - no layout overflow on mobile
+
+DELIVERABLE
+- A working Profile screen
+- A working Shop screen
+- Purchase and equip flows
+- Persistent ownership/equipment
+- No gameplay advantages from items
+- No breaking changes to trading/idle systems

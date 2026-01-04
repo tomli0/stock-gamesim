@@ -1,6 +1,6 @@
 import { useStockGame } from "@/lib/stores/useStockGame";
 import { useIdleIncome } from "@/lib/stores/useIdleIncome";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export default function EndOfDayModal() {
   const { 
@@ -16,28 +16,29 @@ export default function EndOfDayModal() {
     getTotalValue,
   } = useStockGame();
   
-  const { fundSize, applyTradingPerformance } = useIdleIncome();
+  const fundSize = useIdleIncome(state => state.fundSize);
   const [fundGrowth, setFundGrowth] = useState(0);
-  const [hasAppliedGrowth, setHasAppliedGrowth] = useState(false);
+  const hasAppliedRef = useRef(false);
   
   useEffect(() => {
-    if (showEndOfDayModal && !hasAppliedGrowth) {
+    if (showEndOfDayModal && !hasAppliedRef.current) {
+      hasAppliedRef.current = true;
+      
       const totalValue = getTotalValue();
       const portfolioValue = getPortfolioValue();
       const dailyReturn = totalValue > 0 ? dailyPnL / totalValue : 0;
-      const prevFundSize = fundSize;
+      const prevFundSize = useIdleIncome.getState().fundSize;
       
-      applyTradingPerformance(dailyReturn, portfolioValue);
+      useIdleIncome.getState().applyTradingPerformance(dailyReturn, portfolioValue);
       
       const newFundSize = useIdleIncome.getState().fundSize;
       setFundGrowth(newFundSize - prevFundSize);
-      setHasAppliedGrowth(true);
     }
-  }, [showEndOfDayModal, hasAppliedGrowth, dailyPnL, getTotalValue, getPortfolioValue, fundSize, applyTradingPerformance]);
+  }, [showEndOfDayModal, dailyPnL, getTotalValue, getPortfolioValue]);
   
   useEffect(() => {
     if (!showEndOfDayModal) {
-      setHasAppliedGrowth(false);
+      hasAppliedRef.current = false;
       setFundGrowth(0);
     }
   }, [showEndOfDayModal]);

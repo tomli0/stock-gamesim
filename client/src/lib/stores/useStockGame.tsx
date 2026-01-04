@@ -41,6 +41,8 @@ export interface GameState {
   showEndOfDayModal: boolean;
   dailyPnL: number;
   totalRealizedPnL: number;
+  tutorialMode: boolean;
+  tutorialTicker: string | null;
   
   getCareerLevel: () => CareerLevel;
   getPortfolioValue: () => number;
@@ -55,6 +57,8 @@ export interface GameState {
   startNewDay: () => void;
   resetGame: () => void;
   addFeedMessage: (message: string) => void;
+  initTutorialMode: () => void;
+  disableTutorialMode: () => void;
 }
 
 const INITIAL_STOCKS: Stock[] = [
@@ -306,6 +310,8 @@ export const useStockGame = create<GameState>()(
       showEndOfDayModal: false,
       dailyPnL: 0,
       totalRealizedPnL: savedState?.totalRealizedPnL || 0,
+      tutorialMode: false,
+      tutorialTicker: null,
       
       getCareerLevel: () => getCareerLevelFromRep(get().reputation),
       
@@ -408,7 +414,7 @@ export const useStockGame = create<GameState>()(
       },
       
       endDay: () => {
-        const { stocks, positions, cash } = get();
+        const { stocks, positions, cash, tutorialMode, tutorialTicker } = get();
         
         const previousValue = positions.reduce((total, pos) => {
           const stock = stocks.find(s => s.ticker === pos.ticker);
@@ -416,6 +422,12 @@ export const useStockGame = create<GameState>()(
         }, 0) + cash;
         
         const { news, modifiers } = generateDailyNews(stocks);
+        
+        if (tutorialMode && tutorialTicker) {
+          const tutorialBoost = 0.02 + Math.random() * 0.04;
+          modifiers.set(tutorialTicker, (modifiers.get(tutorialTicker) || 0) + tutorialBoost);
+        }
+        
         const updatedStocks = updateStockPrices(stocks, modifiers);
         
         const currentValue = positions.reduce((total, pos) => {
@@ -441,7 +453,9 @@ export const useStockGame = create<GameState>()(
           showEndOfDayModal: true,
           dailyNews: news,
         });
-        saveState(get());
+        if (!tutorialMode) {
+          saveState(get());
+        }
       },
       
       startNewDay: () => {
@@ -478,6 +492,30 @@ export const useStockGame = create<GameState>()(
       
       addFeedMessage: (message) => {
         set({ feedMessages: [...get().feedMessages, message] });
+      },
+      
+      initTutorialMode: () => {
+        const freshStocks = initializeStocks();
+        set({
+          day: 1,
+          cash: 100000,
+          positions: [],
+          stocks: freshStocks,
+          reputation: 50,
+          newClientUsedToday: false,
+          dailyNews: [],
+          feedMessages: ["Welcome to the tutorial! Let's learn how to trade."],
+          selectedTicker: null,
+          showEndOfDayModal: false,
+          dailyPnL: 0,
+          totalRealizedPnL: 0,
+          tutorialMode: true,
+          tutorialTicker: "NLSY",
+        });
+      },
+      
+      disableTutorialMode: () => {
+        set({ tutorialMode: false, tutorialTicker: null });
       },
     };
   })

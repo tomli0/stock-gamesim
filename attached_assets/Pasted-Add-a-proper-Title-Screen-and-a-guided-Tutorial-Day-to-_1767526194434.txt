@@ -1,0 +1,112 @@
+Add a proper Title Screen and a guided Tutorial Day to the existing stock broker simulator project.
+
+CRITICAL:
+- Do NOT reset saves automatically.
+- Add a “New Game” option that can start a fresh save (with confirmation).
+- Keep all companies/tickers and market data fictional.
+- Keep the current UI and gameplay loop intact; only add title screen + tutorial flow.
+
+1) TITLE SCREEN (Main Menu)
+Create a full-screen Title Screen shown on first load (before entering the trading desk).
+
+Title Screen layout:
+- Game title: “Market Desk Simulator” (or “Market Desk” if shorter fits)
+- Subtitle: “A fictional broker day-by-day portfolio simulator”
+- Buttons:
+  - “Continue” (only enabled if a save exists)
+  - “New Game”
+  - “Tutorial”
+  - “Settings”
+  - “Credits”
+- Small disclaimer text at bottom:
+  “All companies and market data are fictional.”
+
+Buttons behavior:
+- Continue:
+  - Loads existing save and goes directly to the Trading Desk (day loop).
+- New Game:
+  - Shows confirmation modal:
+    “Start a new game? This will overwrite your current save.”
+  - If confirmed, reset state to day 1 defaults, then enter Trading Desk.
+- Tutorial:
+  - Starts the guided tutorial flow (Tutorial Day 0/1).
+- Settings:
+  - Opens a simple modal with toggles:
+    - Sound on/off
+    - Haptics on/off (if applicable)
+    - Sandbox mode on/off (optional; if already exists keep it)
+- Credits:
+  - Simple modal text.
+
+2) TUTORIAL DAY (Guided Onboarding)
+Add a step-by-step tutorial overlay that guides the player through core actions.
+
+Tutorial requirements:
+- The tutorial should be interactive, not just text.
+- Use a dimmed overlay with a highlighted UI element (spotlight effect) and a tooltip bubble.
+- Provide “Next” and “Skip Tutorial” controls.
+- If user skips, tutorial is marked completed and never forces again (but can be re-launched from Title Screen).
+
+Tutorial flow (steps):
+Step 1: Welcome
+- Highlight the Top Bar.
+- Explain: Day, Cash, Portfolio, Total, Reputation, Career Level.
+
+Step 2: Market List
+- Highlight the Market panel.
+- Instruction: “Tap a stock to view details.”
+
+Step 3: Stock Details
+- After selecting a stock, highlight the Trade panel.
+- Explain price, daily change, and the chart.
+
+Step 4: Place a Buy
+- Highlight Quantity input and Buy button.
+- Instruction: “Set quantity to 5 and press Buy.”
+- Gate progression: only allow Next after a buy order is executed.
+
+Step 5: Understand Position
+- Highlight “Your Position” section.
+- Explain shares owned, average cost, and position value.
+
+Step 6: End the Day
+- Highlight the “End Day” button.
+- Explain that prices update at end of day and news impacts returns.
+- Gate: only proceed after ending the day.
+
+Step 7: End-of-Day Summary
+- On End-of-Day modal, highlight Daily P/L and Best/Worst performer.
+- Explain reputation change.
+- Instruction: “Press Start Day 2 to continue.”
+
+Tutorial completion:
+- Mark tutorial as completed in localStorage.
+- After completion, user proceeds into normal gameplay.
+- Add a small option in Settings: “Reset Tutorial”.
+
+3) TUTORIAL MARKET BEHAVIOR (Controlled Day)
+To make the tutorial clear and rewarding:
+- During Tutorial Day 1 only:
+  - Ensure the selected stock used in the tutorial experiences a noticeable move next day (e.g., +2% to +6%).
+  - Keep other stocks normal.
+- Ensure the player sees a meaningful change in portfolio value to understand the loop.
+
+4) FILE STRUCTURE / IMPLEMENTATION NOTES
+- Implement a simple “screen state” router:
+  - "title" | "game" | "tutorial"
+- Store:
+  - hasSave
+  - tutorialCompleted
+  - settings (sound/haptics/etc.)
+- Keep the 3D scene loaded only for the game screen; title screen can be a separate UI layer.
+
+5) QUALITY
+- Make the title screen look polished and consistent with current dark theme.
+- Buttons should be large and mobile-friendly.
+- Ensure everything works on mobile viewport.
+- Add keyboard/mouse support on desktop where relevant.
+
+Deliver:
+- Updated code with Title Screen + Tutorial flow working end-to-end.
+- Ensure “Continue” works and tutorial does not break existing saves.
+- Update README with how to start tutorial and reset tutorial/save.

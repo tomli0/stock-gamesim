@@ -17,7 +17,7 @@ export default function DailyFeed() {
         <h2 className="text-white font-bold text-sm">Daily Feed</h2>
         <button
           onClick={endDay}
-          className="bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs py-1 px-3 rounded transition-colors"
+          className="end-day-button bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs py-1 px-3 rounded transition-colors"
         >
           End Day
         </button>

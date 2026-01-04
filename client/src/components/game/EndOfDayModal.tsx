@@ -33,7 +33,7 @@ export default function EndOfDayModal() {
   
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-900 border border-slate-700 rounded-lg max-w-md w-full shadow-2xl">
+      <div className="end-of-day-modal bg-slate-900 border border-slate-700 rounded-lg max-w-md w-full shadow-2xl">
         <div className="px-6 py-4 border-b border-slate-700">
           <h2 className="text-white font-bold text-xl">End of Day {day}</h2>
         </div>

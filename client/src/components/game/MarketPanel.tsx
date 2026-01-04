@@ -4,7 +4,7 @@ export default function MarketPanel() {
   const { stocks, selectedTicker, selectStock } = useStockGame();
 
   return (
-    <div className="bg-slate-900/95 backdrop-blur-sm border-r border-slate-700 h-full overflow-hidden flex flex-col">
+    <div className="market-panel bg-slate-900/95 backdrop-blur-sm border-r border-slate-700 h-full overflow-hidden flex flex-col">
       <div className="px-3 py-2 border-b border-slate-700">
         <h2 className="text-white font-bold text-sm">Market</h2>
       </div>

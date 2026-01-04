@@ -88,7 +88,7 @@ export default function TradePanel() {
     : 0;
   
   return (
-    <div className="bg-slate-900/95 backdrop-blur-sm border-l border-slate-700 h-full overflow-y-auto">
+    <div className="trade-panel bg-slate-900/95 backdrop-blur-sm border-l border-slate-700 h-full overflow-y-auto">
       <div className="px-4 py-3 border-b border-slate-700">
         <h2 className="text-white font-bold text-sm">Trade</h2>
       </div>
@@ -117,7 +117,7 @@ export default function TradePanel() {
         </div>
         
         {position && (
-          <div className="bg-slate-800/50 rounded-lg p-3">
+          <div className="position-info bg-slate-800/50 rounded-lg p-3">
             <div className="text-slate-400 text-xs mb-2">Your Position</div>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
@@ -142,7 +142,7 @@ export default function TradePanel() {
           </div>
         )}
         
-        <div className="space-y-3">
+        <div className="trade-controls space-y-3">
           <div>
             <label className="text-slate-400 text-xs block mb-1">Quantity</label>
             <input

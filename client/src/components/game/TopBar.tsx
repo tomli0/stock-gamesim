@@ -24,7 +24,7 @@ export default function TopBar() {
   };
 
   return (
-    <div className="bg-slate-900/95 backdrop-blur-sm border-b border-slate-700 px-4 py-2 flex items-center justify-between flex-wrap gap-2">
+    <div className="top-bar bg-slate-900/95 backdrop-blur-sm border-b border-slate-700 px-4 py-2 flex items-center justify-between flex-wrap gap-2">
       <div className="flex items-center gap-4 flex-wrap">
         <div className="flex items-center gap-2">
           <span className="text-slate-400 text-sm">Day</span>

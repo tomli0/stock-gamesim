@@ -43,7 +43,7 @@ export default function ShopScreen({ onClose }: ShopScreenProps) {
   const handlePurchase = (item: ShopItem) => {
     const result = purchaseItem(item, cash, careerLevel);
     if (result.success) {
-      useStockGame.setState({ cash: cash - item.price });
+      useStockGame.getState().spendCash(item.price, `Purchased ${item.name} for $${item.price.toLocaleString()}`);
       showToast(`Purchased: ${item.name}`, "success");
     } else {
       showToast(result.error || "Purchase failed", "error");

@@ -65,6 +65,7 @@ export interface GameState {
   selectStock: (ticker: string | null) => void;
   buyStock: (ticker: string, quantity: number) => boolean;
   sellStock: (ticker: string, quantity: number) => boolean;
+  spendCash: (amount: number, reason?: string) => boolean;
   useNewClient: () => void;
   endDay: () => void;
   startNewDay: () => void;
@@ -547,6 +548,23 @@ export const useStockGame = create<GameState>()(
           positions: newPositions,
           totalRealizedPnL: Math.round((totalRealizedPnL + realizedPnL) * 100) / 100,
           feedMessages: [...get().feedMessages, `Sold ${quantity} shares of ${ticker} at $${stock.price.toFixed(2)} (P/L: $${realizedPnL.toFixed(2)})`]
+        });
+        saveState(get());
+        return true;
+      },
+      
+      spendCash: (amount, reason) => {
+        const { cash } = get();
+        if (amount <= 0 || amount > cash) return false;
+        
+        const messages = [...get().feedMessages];
+        if (reason) {
+          messages.push(reason);
+        }
+        
+        set({ 
+          cash: Math.round((cash - amount) * 100) / 100,
+          feedMessages: messages
         });
         saveState(get());
         return true;

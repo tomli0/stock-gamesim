@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useStockGame } from "@/lib/stores/useStockGame";
 import { usePlayerProfile } from "@/lib/stores/usePlayerProfile";
-import { useIdleIncome } from "@/lib/stores/useIdleIncome";
 import { 
   ItemCategory, 
   RARITY_COLORS, 
@@ -18,7 +17,7 @@ const CAREER_TITLES: Record<string, string> = {
   Junior: "Junior Trader",
   Associate: "Associate Broker",
   Senior: "Senior Portfolio Manager",
-  Partner: "Fund Partner",
+  Partner: "Managing Partner",
 };
 
 const SLOT_ICONS: Record<ItemCategory, string> = {
@@ -42,7 +41,6 @@ export default function ProfileScreen({ onClose }: ProfileScreenProps) {
   
   const { cash, getCareerLevel, getPortfolioValue, getTotalValue, reputation } = useStockGame();
   const { name, tagline, setName, setTagline, equipped, getEquippedItem, equipItem, unequipItem, ownedItemIds } = usePlayerProfile();
-  const { fundSize } = useIdleIncome();
   
   const careerLevel = getCareerLevel();
   const title = CAREER_TITLES[careerLevel] || careerLevel;
@@ -171,8 +169,8 @@ export default function ProfileScreen({ onClose }: ProfileScreenProps) {
               </div>
             </div>
             <div className="bg-slate-800/50 rounded-lg p-3">
-              <div className="text-slate-400 text-xs mb-1">Fund Size (AUM)</div>
-              <div className="text-purple-400 font-bold text-lg">${fundSize.toLocaleString()}</div>
+              <div className="text-slate-400 text-xs mb-1">Portfolio Value</div>
+              <div className="text-blue-400 font-bold text-lg">${portfolioValue.toLocaleString()}</div>
             </div>
             <div className="bg-slate-800/50 rounded-lg p-3">
               <div className="text-slate-400 text-xs mb-1">Cash</div>

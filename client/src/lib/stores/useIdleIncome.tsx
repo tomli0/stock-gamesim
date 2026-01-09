@@ -15,8 +15,6 @@ export interface RewardedBoost {
 }
 
 export interface IdleState {
-  fundSize: number;
-  baseIncomePerSecond: number;
   tapBoostPercent: number;
   tapBoostMaxPercent: number;
   tapBoostDecayPerSecond: number;
@@ -44,10 +42,6 @@ export interface IdleState {
   isBoostActive: (boostId: string) => boolean;
   isBoostOnCooldown: (boostId: string) => boolean;
   
-  increaseFundSize: (amount: number) => void;
-  applyTradingPerformance: (dailyReturn: number, portfolioValue: number) => void;
-  updateCareerMultiplier: (careerLevel: CareerLevel) => void;
-  
   saveIdleState: () => void;
   updateLastActive: () => void;
   resetIdleState: () => void;
@@ -67,8 +61,8 @@ const BASE_INCOME_BY_CAREER: Record<CareerLevel, { min: number; max: number }> =
 const INITIAL_BOOSTS: RewardedBoost[] = [
   {
     id: "double-income",
-    name: "Double Fund Income",
-    description: "2x fund income for 30 minutes",
+    name: "Double Income",
+    description: "2x income for 30 minutes",
     multiplier: 2,
     durationMs: 30 * 60 * 1000,
     cooldownMs: 60 * 60 * 1000,
@@ -95,11 +89,9 @@ function loadIdleState(): Partial<IdleState> | null {
   return null;
 }
 
-function getBaseIncomeForCareer(careerLevel: CareerLevel, fundSize: number): number {
+function getBaseIncomeForCareer(careerLevel: CareerLevel): number {
   const range = BASE_INCOME_BY_CAREER[careerLevel];
-  const fundProgress = Math.min(fundSize / 10000000, 1);
-  const baseIncome = range.min + (range.max - range.min) * fundProgress;
-  return Math.min(baseIncome, range.max);
+  return range.min;
 }
 
 export const useIdleIncome = create<IdleState>()(
@@ -107,8 +99,6 @@ export const useIdleIncome = create<IdleState>()(
     const savedState = loadIdleState();
     
     return {
-      fundSize: savedState?.fundSize || 100000,
-      baseIncomePerSecond: savedState?.baseIncomePerSecond || 2,
       tapBoostPercent: 0,
       tapBoostMaxPercent: 100,
       tapBoostDecayPerSecond: 0.2,
@@ -120,8 +110,8 @@ export const useIdleIncome = create<IdleState>()(
       rewardedBoosts: savedState?.rewardedBoosts || INITIAL_BOOSTS,
       
       getIncomePerSecond: (careerLevel: CareerLevel) => {
-        const { fundSize, tapBoostPercent } = get();
-        const base = getBaseIncomeForCareer(careerLevel, fundSize);
+        const { tapBoostPercent } = get();
+        const base = getBaseIncomeForCareer(careerLevel);
         const tapMultiplier = 1 + tapBoostPercent / 100;
         const activeMultiplier = get().getActiveMultiplier();
         return Math.round(base * tapMultiplier * activeMultiplier * 100) / 100;
@@ -171,7 +161,7 @@ export const useIdleIncome = create<IdleState>()(
       },
       
       calculateOfflineEarnings: (careerLevel: CareerLevel) => {
-        const { lastActiveTimestamp, fundSize, rewardedBoosts } = get();
+        const { lastActiveTimestamp, rewardedBoosts } = get();
         const now = Date.now();
         const offlineSeconds = Math.min((now - lastActiveTimestamp) / 1000, MAX_OFFLINE_SECONDS);
         
@@ -180,7 +170,7 @@ export const useIdleIncome = create<IdleState>()(
           return;
         }
         
-        const baseIncome = getBaseIncomeForCareer(careerLevel, fundSize);
+        const baseIncome = getBaseIncomeForCareer(careerLevel);
         
         let multiplierAtExit = 1;
         for (const boost of rewardedBoosts) {
@@ -268,41 +258,9 @@ export const useIdleIncome = create<IdleState>()(
         return get().getBoostCooldownRemaining(boostId) > 0;
       },
       
-      increaseFundSize: (amount: number) => {
-        set(state => ({
-          fundSize: Math.round((state.fundSize + amount) * 100) / 100,
-        }));
-        get().saveIdleState();
-      },
-      
-      applyTradingPerformance: (dailyReturn: number, portfolioValue: number) => {
-        const { fundSize } = get();
-        
-        if (dailyReturn > 0) {
-          const growthFactor = dailyReturn * 0.01;
-          const growth = portfolioValue * growthFactor;
-          set({ fundSize: Math.round((fundSize + growth) * 100) / 100 });
-        } else if (dailyReturn < -0.05) {
-          const shrinkFactor = Math.abs(dailyReturn) * 0.005;
-          const shrink = fundSize * shrinkFactor;
-          set({ fundSize: Math.max(10000, Math.round((fundSize - shrink) * 100) / 100) });
-        }
-        
-        get().saveIdleState();
-      },
-      
-      updateCareerMultiplier: (careerLevel: CareerLevel) => {
-        const { fundSize } = get();
-        const newBase = getBaseIncomeForCareer(careerLevel, fundSize);
-        set({ baseIncomePerSecond: newBase });
-        get().saveIdleState();
-      },
-      
       saveIdleState: () => {
         const state = get();
         setLocalStorage(IDLE_STORAGE_KEY, {
-          fundSize: state.fundSize,
-          baseIncomePerSecond: state.baseIncomePerSecond,
           lastActiveTimestamp: state.lastActiveTimestamp,
           totalEarnedFromIdle: state.totalEarnedFromIdle,
           rewardedBoosts: state.rewardedBoosts,
@@ -316,8 +274,6 @@ export const useIdleIncome = create<IdleState>()(
       resetIdleState: () => {
         localStorage.removeItem(IDLE_STORAGE_KEY);
         set({
-          fundSize: 100000,
-          baseIncomePerSecond: 2,
           tapBoostPercent: 0,
           lastActiveTimestamp: Date.now(),
           totalEarnedFromIdle: 0,

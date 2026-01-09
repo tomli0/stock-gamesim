@@ -24,7 +24,7 @@ export default function MobileIdlePanel() {
           />
           <div className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900 border-t border-slate-700 p-4 rounded-t-2xl max-h-[70vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-white font-bold">Fund & Boosts</h3>
+              <h3 className="text-white font-bold">Desk Work & Boosts</h3>
               <button
                 onClick={() => setIsOpen(false)}
                 className="text-slate-400 hover:text-white p-1"

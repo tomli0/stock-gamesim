@@ -1,6 +1,4 @@
 import { useStockGame } from "@/lib/stores/useStockGame";
-import { useIdleIncome } from "@/lib/stores/useIdleIncome";
-import { useState, useEffect } from "react";
 
 interface TopBarProps {
   onOpenShop?: () => void;
@@ -16,41 +14,11 @@ export default function TopBar({ onOpenShop, onOpenProfile }: TopBarProps) {
     newClientUsedToday,
     getCareerLevel,
     getPortfolioValue,
-    getTotalValue,
     useNewClient,
   } = useStockGame();
 
-  const { fundSize, getIncomePerSecond, isBoostActive, getBoostTimeRemaining } = useIdleIncome();
   const careerLevel = getCareerLevel();
   const portfolioValue = getPortfolioValue();
-  const totalValue = getTotalValue();
-  const incomePerSecond = getIncomePerSecond(careerLevel);
-  
-  const doubleIncomeActive = isBoostActive("double-income");
-  const [boostTimeLeft, setBoostTimeLeft] = useState(0);
-  
-  useEffect(() => {
-    if (!doubleIncomeActive) {
-      setBoostTimeLeft(0);
-      return;
-    }
-    
-    const updateTime = () => {
-      const remaining = getBoostTimeRemaining("double-income");
-      setBoostTimeLeft(remaining);
-    };
-    
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
-  }, [doubleIncomeActive, getBoostTimeRemaining]);
-  
-  const formatBoostTime = (ms: number): string => {
-    const minutes = Math.floor(ms / 60000);
-    const seconds = Math.floor((ms % 60000) / 1000);
-    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-  };
-  
   const formatTimer = (totalSeconds: number): string => {
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
@@ -93,27 +61,6 @@ export default function TopBar({ onOpenShop, onOpenProfile }: TopBarProps) {
           <span className="text-blue-400 font-semibold text-sm">${portfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
         </div>
         
-        <div className="h-5 w-px bg-slate-700" />
-        
-        <div className="flex items-center gap-2">
-          <span className="text-slate-400 text-xs">Fund</span>
-          <span className="text-purple-400 font-semibold text-sm">
-            ${fundSize >= 1000000 
-              ? `${(fundSize / 1000000).toFixed(2)}M` 
-              : fundSize.toLocaleString()}
-          </span>
-        </div>
-        
-        <div className="h-5 w-px bg-slate-700" />
-        
-        <div className="flex items-center gap-1">
-          <span className="text-emerald-400 font-mono text-xs">+${incomePerSecond.toFixed(2)}/s</span>
-          {doubleIncomeActive && (
-            <span className="bg-purple-600 text-white text-xs px-1.5 py-0.5 rounded font-bold animate-pulse">
-              x2 {formatBoostTime(boostTimeLeft)}
-            </span>
-          )}
-        </div>
       </div>
       
       <div className="flex items-center gap-3 flex-wrap">

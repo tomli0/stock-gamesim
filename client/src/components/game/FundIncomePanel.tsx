@@ -1,11 +1,10 @@
 import { useIdleIncome } from "@/lib/stores/useIdleIncome";
 import { useStockGame } from "@/lib/stores/useStockGame";
 import { useAudio } from "@/lib/stores/useAudio";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function FundIncomePanel() {
   const { 
-    fundSize, 
     tapBoostPercent, 
     tapBoostMaxPercent,
     getIncomePerSecond,
@@ -34,21 +33,13 @@ export default function FundIncomePanel() {
   return (
     <div className="bg-slate-800/80 border border-slate-700 rounded-lg p-3 space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-white font-bold text-sm">Fund Income</h3>
+        <h3 className="text-white font-bold text-sm">Desk Work</h3>
         <div className="text-emerald-400 font-mono text-sm">
           +${incomePerSecond.toFixed(2)}/s
         </div>
       </div>
       
-      <div className="grid grid-cols-2 gap-2 text-xs">
-        <div className="bg-slate-900/50 rounded p-2">
-          <div className="text-slate-400">Fund Size</div>
-          <div className="text-white font-semibold">
-            ${fundSize >= 1000000 
-              ? `${(fundSize / 1000000).toFixed(2)}M` 
-              : fundSize.toLocaleString()}
-          </div>
-        </div>
+      <div className="grid grid-cols-1 gap-2 text-xs">
         <div className="bg-slate-900/50 rounded p-2">
           <div className="text-slate-400">Tap Boost</div>
           <div className="text-amber-400 font-semibold">+{boostPercent}%</div>
@@ -83,7 +74,7 @@ export default function FundIncomePanel() {
       </button>
       
       <p className="text-slate-500 text-xs text-center">
-        Tap to temporarily boost fund income!
+        Tap to temporarily boost income!
       </p>
     </div>
   );

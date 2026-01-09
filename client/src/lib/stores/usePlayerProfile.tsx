@@ -85,7 +85,7 @@ export const usePlayerProfile = create<PlayerProfileState>()(
         }
         
         if (cash < item.price) {
-          return { success: false, error: "Insufficient funds" };
+          return { success: false, error: "Insufficient cash" };
         }
         
         set({ ownedItemIds: [...ownedItemIds, item.id] });

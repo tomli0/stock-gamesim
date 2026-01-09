@@ -1,6 +1,4 @@
 import { useStockGame } from "@/lib/stores/useStockGame";
-import { useIdleIncome } from "@/lib/stores/useIdleIncome";
-import { useEffect, useState, useRef } from "react";
 
 export default function EndOfDayModal() {
   const { 
@@ -12,36 +10,7 @@ export default function EndOfDayModal() {
     stocks,
     positions,
     startNewDay,
-    getPortfolioValue,
-    getTotalValue,
   } = useStockGame();
-  
-  const fundSize = useIdleIncome(state => state.fundSize);
-  const [fundGrowth, setFundGrowth] = useState(0);
-  const hasAppliedRef = useRef(false);
-  
-  useEffect(() => {
-    if (showEndOfDayModal && !hasAppliedRef.current) {
-      hasAppliedRef.current = true;
-      
-      const totalValue = getTotalValue();
-      const portfolioValue = getPortfolioValue();
-      const dailyReturn = totalValue > 0 ? dailyPnL / totalValue : 0;
-      const prevFundSize = useIdleIncome.getState().fundSize;
-      
-      useIdleIncome.getState().applyTradingPerformance(dailyReturn, portfolioValue);
-      
-      const newFundSize = useIdleIncome.getState().fundSize;
-      setFundGrowth(newFundSize - prevFundSize);
-    }
-  }, [showEndOfDayModal, dailyPnL, getTotalValue, getPortfolioValue]);
-  
-  useEffect(() => {
-    if (!showEndOfDayModal) {
-      hasAppliedRef.current = false;
-      setFundGrowth(0);
-    }
-  }, [showEndOfDayModal]);
   
   if (!showEndOfDayModal) return null;
   
@@ -97,17 +66,11 @@ export default function EndOfDayModal() {
             </div>
           )}
           
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3">
             <div className="bg-slate-800/50 rounded-lg p-3">
               <div className="text-slate-400 text-xs mb-1">Reputation</div>
               <div className={`text-lg font-bold ${repChange >= 0 ? "text-green-400" : "text-red-400"}`}>
                 {repChange >= 0 ? "+" : ""}{repChange}
-              </div>
-            </div>
-            <div className="bg-slate-800/50 rounded-lg p-3">
-              <div className="text-slate-400 text-xs mb-1">Fund Growth</div>
-              <div className={`text-lg font-bold ${fundGrowth >= 0 ? "text-purple-400" : "text-red-400"}`}>
-                {fundGrowth >= 0 ? "+" : ""}${Math.abs(fundGrowth).toFixed(0)}
               </div>
             </div>
           </div>

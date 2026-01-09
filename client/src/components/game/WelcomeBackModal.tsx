@@ -4,15 +4,14 @@ import { useAppState } from "@/lib/stores/useAppState";
 
 export default function WelcomeBackModal() {
   const { showWelcomeBackModal, pendingOfflineEarnings, collectOfflineEarnings } = useIdleIncome();
-  const { cash } = useStockGame();
   const screen = useAppState(state => state.screen);
   
   if (!showWelcomeBackModal || pendingOfflineEarnings <= 0 || screen === "tutorial") return null;
   
   const handleCollect = () => {
     const earnings = collectOfflineEarnings();
-    useStockGame.setState({ cash: cash + earnings });
-    useStockGame.getState().addFeedMessage(`Collected $${earnings.toLocaleString()} in offline fund earnings`);
+    useStockGame.setState(state => ({ cash: state.cash + earnings }));
+    useStockGame.getState().addFeedMessage(`Collected $${earnings.toLocaleString()} in offline earnings`);
   };
   
   const formatDuration = (ms: number): string => {
@@ -37,7 +36,7 @@ export default function WelcomeBackModal() {
         
         <div className="p-6 space-y-4">
           <p className="text-slate-300">
-            Your fund has been working while you were away for <span className="text-white font-semibold">{formatDuration(offlineTime)}</span>.
+            Your desk kept generating income while you were away for <span className="text-white font-semibold">{formatDuration(offlineTime)}</span>.
           </p>
           
           <div className="bg-emerald-900/30 border border-emerald-700/50 rounded-lg p-4 text-center">
@@ -48,7 +47,7 @@ export default function WelcomeBackModal() {
           </div>
           
           <p className="text-slate-500 text-xs text-center">
-            Tip: Higher career levels and Fund Size increase offline earnings!
+            Tip: Higher career levels increase offline earnings.
           </p>
         </div>
         

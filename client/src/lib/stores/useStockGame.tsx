@@ -41,6 +41,7 @@ export type CareerLevel = "Junior" | "Associate" | "Senior" | "Partner";
 
 export interface GameState {
   day: number;
+  timeRemainingSeconds: number;
   cash: number;
   positions: Position[];
   stocks: Stock[];
@@ -73,6 +74,7 @@ export interface GameState {
   addFeedMessage: (message: string) => void;
   initTutorialMode: () => void;
   disableTutorialMode: () => void;
+  tickDayTimer: () => void;
 }
 
 const INITIAL_STOCKS: Stock[] = [
@@ -452,6 +454,7 @@ export const useStockGame = create<GameState>()(
     
     return {
       day: savedState?.day || 1,
+      timeRemainingSeconds: 120,
       cash: savedState?.cash || 100000,
       positions: savedState?.positions || [],
       stocks: initialStocks,
@@ -644,6 +647,7 @@ export const useStockGame = create<GameState>()(
         
         set({
           day: get().day + 1,
+          timeRemainingSeconds: 120,
           showEndOfDayModal: false,
           newClientUsedToday: false,
           dailyNews: [],
@@ -660,6 +664,7 @@ export const useStockGame = create<GameState>()(
         const freshStocks = initializeStocks();
         set({
           day: 1,
+          timeRemainingSeconds: 120,
           cash: 100000,
           positions: [],
           stocks: freshStocks,
@@ -684,6 +689,7 @@ export const useStockGame = create<GameState>()(
         const freshStocks = initializeStocks();
         set({
           day: 1,
+          timeRemainingSeconds: 120,
           cash: 100000,
           positions: [],
           stocks: freshStocks,
@@ -704,6 +710,20 @@ export const useStockGame = create<GameState>()(
       
       disableTutorialMode: () => {
         set({ tutorialMode: false, tutorialTicker: null });
+      },
+      
+      tickDayTimer: () => {
+        const { timeRemainingSeconds, showEndOfDayModal } = get();
+        if (showEndOfDayModal || timeRemainingSeconds <= 0) {
+          return;
+        }
+        
+        const nextTime = timeRemainingSeconds - 1;
+        set({ timeRemainingSeconds: Math.max(0, nextTime) });
+        
+        if (nextTime <= 0) {
+          get().endDay();
+        }
       },
     };
   })

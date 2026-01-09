@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TopBar from "./TopBar";
 import MarketPanel from "./MarketPanel";
 import TradePanel from "./TradePanel";
@@ -14,13 +14,23 @@ import MobileIdlePanel from "./MobileIdlePanel";
 import ShopScreen from "./ShopScreen";
 import ProfileScreen from "./ProfileScreen";
 import { useIdleGameLoop } from "@/hooks/useIdleGameLoop";
+import { useStockGame } from "@/lib/stores/useStockGame";
 
 type ActiveScreen = "game" | "shop" | "profile";
 
 export default function GameUI() {
   const [activeScreen, setActiveScreen] = useState<ActiveScreen>("game");
+  const tickDayTimer = useStockGame(state => state.tickDayTimer);
   
   useIdleGameLoop();
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      tickDayTimer();
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [tickDayTimer]);
   
   if (activeScreen === "shop") {
     return <ShopScreen onClose={() => setActiveScreen("game")} />;

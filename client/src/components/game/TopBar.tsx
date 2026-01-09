@@ -10,6 +10,7 @@ interface TopBarProps {
 export default function TopBar({ onOpenShop, onOpenProfile }: TopBarProps) {
   const { 
     day, 
+    timeRemainingSeconds,
     cash, 
     reputation, 
     newClientUsedToday,
@@ -49,6 +50,12 @@ export default function TopBar({ onOpenShop, onOpenProfile }: TopBarProps) {
     const seconds = Math.floor((ms % 60000) / 1000);
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
+  
+  const formatTimer = (totalSeconds: number): string => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  };
 
   const levelColors: Record<string, string> = {
     Junior: "bg-gray-500",
@@ -63,6 +70,13 @@ export default function TopBar({ onOpenShop, onOpenProfile }: TopBarProps) {
         <div className="flex items-center gap-2">
           <span className="text-slate-400 text-xs">Day</span>
           <span className="text-white font-bold">{day}</span>
+        </div>
+        
+        <div className="h-5 w-px bg-slate-700" />
+        
+        <div className="flex items-center gap-2">
+          <span className="text-slate-400 text-xs">Time</span>
+          <span className="text-white font-semibold text-sm font-mono">{formatTimer(timeRemainingSeconds)}</span>
         </div>
         
         <div className="h-5 w-px bg-slate-700" />
